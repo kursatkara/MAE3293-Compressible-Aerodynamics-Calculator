@@ -1,150 +1,135 @@
+\
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compressible Aerodynamics Calculator</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Space+Mono&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Compressible Aerodynamics Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-    <header>
-        <h1>Compressible Aerodynamics Calculator</h1>
-        <p>A tool for Isentropic Flow, Normal Shock, Oblique Shock, and Prandtl-Meyer Expansion calculations.</p>
-    </header>
+  <header>
+    <h1>Compressible Aerodynamics Calculator</h1>
+    <p>A tool for Isentropic Flow, Normal Shock, Oblique Shock, and Prandtl-Meyer Expansion calculations.</p>
+  </header>
 
-    <main class="calculator-grid">
-        <!-- Global Settings -->
-        <section class="card settings">
-            <h2>Global Settings</h2>
-            <div class="input-group">
-                <label for="gamma-input">Ratio of Specific Heats (γ)</label>
-                <input type="number" id="gamma-input" value="1.4" min="1.0" step="0.01">
-            </div>
-        </section>
+  <main>
+    <section>
+      <h2>Global Settings</h2>
+      <label for="gamma">Ratio of Specific Heats (&gamma;)</label>
+      <input type="number" id="gamma" value="1.4" step="0.01" min="1.0">
+    </section>
 
-        <!-- Isentropic Flow Section -->
-        <section class="card isentropic">
-            <h2>Isentropic Flow</h2>
-            <div class="input-group">
-                <label for="isentropic-input-type">Input Type</label>
-                <select id="isentropic-input-type">
-                    <option value="M">Mach Number (M)</option>
-                    <option value="T_T0">T/T₀</option>
-                    <option value="P_P0">P/P₀</option>
-                    <option value="Rho_Rho0">ρ/ρ₀</option>
-                    <option value="A_Astar">A/A*</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="isentropic-input-value" id="isentropic-input-label">Mach Number (M)</label>
-                <input type="number" id="isentropic-input-value" value="1.0" min="0" step="0.01">
-            </div>
-            <div class="input-group flow-type-select hidden" id="isentropic-flow-type-group">
-                <label for="isentropic-flow-type">Flow Regime for A/A*</label>
-                <select id="isentropic-flow-type">
-                    <option value="subsonic">Subsonic</option>
-                    <option value="supersonic">Supersonic</option>
-                </select>
-            </div>
-            <button class="calculate-btn" onclick="calculateIsentropic()">Calculate Isentropic Flow</button>
+    <section>
+      <h2>Isentropic Flow</h2>
+      <div class="block">
+        <label for="iso-input-type">Input Type</label>
+        <select id="iso-input-type" onchange="updateIsentropicLabel()">
+          <option value="M">Mach Number (M)</option>
+          <option value="T_T0">T/T₀</option>
+          <option value="P_P0">P/P₀</option>
+          <option value="rho_rho0">ρ/ρ₀</option>
+          <option value="A_Astar">A/A*</option>
+        </select>
+      </div>
+      <div class="block">
+        <label id="iso-input-label" for="iso-input-value">Mach Number (M)</label>
+        <input type="number" id="iso-input-value" step="0.0001" min="0">
+      </div>
+      <div class="block" id="iso-area-regime">
+        <span>Flow Regime for A/A*</span><br>
+        <label><input type="radio" name="iso-area-branch" value="subsonic" checked> Subsonic</label>
+        <label><input type="radio" name="iso-area-branch" value="supersonic"> Supersonic</label>
+      </div>
+      <button onclick="calculateIsentropic()">Calculate Isentropic Flow</button>
 
-            <h3>Results</h3>
-            <div class="results-grid">
-                <div class="result-item"><span class="label">M:</span> <span id="isentropic-M"></span></div>
-                <div class="result-item"><span class="label">T/T₀:</span> <span id="isentropic-T_T0"></span></div>
-                <div class="result-item"><span class="label">P/P₀:</span> <span id="isentropic-P_P0"></span></div>
-                <div class="result-item"><span class="label">ρ/ρ₀:</span> <span id="isentropic-Rho_Rho0"></span></div>
-                <div class="result-item"><span class="label">A/A*:</span> <span id="isentropic-A_Astar"></span></div>
-            </div>
-            <p class="error-message" id="isentropic-error"></p>
-        </section>
+      <h3>Results</h3>
+      <table class="results">
+        <tr><th>M:</th><td id="iso-M">–</td></tr>
+        <tr><th>T/T₀:</th><td id="iso-T_T0">–</td></tr>
+        <tr><th>P/P₀:</th><td id="iso-P_P0">–</td></tr>
+        <tr><th>ρ/ρ₀:</th><td id="iso-rho_rho0">–</td></tr>
+        <tr><th>A/A*:</th><td id="iso-A_Astar">–</td></tr>
+      </table>
+    </section>
 
-        <!-- Normal Shock Section -->
-        <section class="card normal-shock">
-            <h2>Normal Shock</h2>
-            <div class="input-group">
-                <label for="M1-normal-shock">Upstream Mach Number (M₁)</label>
-                <input type="number" id="M1-normal-shock" value="2.0" min="1.0001" step="0.01">
-            </div>
-            <button class="calculate-btn" onclick="calculateNormalShock()">Calculate Normal Shock</button>
+    <section>
+      <h2>Normal Shock</h2>
+      <div class="block">
+        <label for="ns-M1">Upstream Mach Number (M₁)</label>
+        <input type="number" id="ns-M1" step="0.0001" min="1.0">
+      </div>
+      <button onclick="calculateNormalShock()">Calculate Normal Shock</button>
 
-            <h3>Results</h3>
-            <div class="results-grid">
-                <div class="result-item"><span class="label">M₂:</span> <span id="M2-normal-shock"></span></div>
-                <div class="result-item"><span class="label">P₂/P₁:</span> <span id="P2-P1-normal-shock"></span></div>
-                <div class="result-item"><span class="label">T₂/T₁:</span> <span id="T2-T1-normal-shock"></span></div>
-                <div class="result-item"><span class="label">ρ₂/ρ₁:</span> <span id="Rho2-Rho1-normal-shock"></span></div>
-                <div class="result-item"><span class="label">P₀₂/P₀₁:</span> <span id="P02-P01-normal-shock"></span></div>
-            </div>
-            <p class="error-message" id="normal-shock-error"></p>
-        </section>
+      <h3>Results</h3>
+      <table class="results">
+        <tr><th>M₂:</th><td id="ns-M2">–</td></tr>
+        <tr><th>P₂/P₁:</th><td id="ns-P2_P1">–</td></tr>
+        <tr><th>T₂/T₁:</th><td id="ns-T2_T1">–</td></tr>
+        <tr><th>ρ₂/ρ₁:</th><td id="ns-rho2_rho1">–</td></tr>
+        <tr><th>P₀₂/P₀₁:</th><td id="ns-P02_P01">–</td></tr>
+      </table>
+    </section>
 
-        <!-- Oblique Shock Section -->
-        <section class="card oblique-shock">
-            <h2>Oblique Shock</h2>
-            <div class="input-group">
-                <label for="M1-oblique-shock">Upstream Mach Number (M₁)</label>
-                <input type="number" id="M1-oblique-shock" value="2.0" min="1.0001" step="0.01">
-            </div>
-            <div class="input-group">
-                <label for="theta-oblique-shock">Deflection Angle (θ) [degrees]</label>
-                <input type="number" id="theta-oblique-shock" value="10" min="0" step="0.1">
-            </div>
-            <div class="input-group">
-                <label for="oblique-shock-type">Shock Type</label>
-                <select id="oblique-shock-type">
-                    <option value="weak">Weak Shock</option>
-                    <option value="strong">Strong Shock</option>
-                </select>
-            </div>
-            <button class="calculate-btn" onclick="calculateObliqueShock()">Calculate Oblique Shock</button>
+    <section>
+      <h2>Oblique Shock</h2>
+      <div class="block">
+        <label for="os-M1">Upstream Mach Number (M₁)</label>
+        <input type="number" id="os-M1" step="0.0001" min="1.0">
+      </div>
+      <div class="block">
+        <label for="os-theta">Deflection Angle (θ) [degrees]</label>
+        <input type="number" id="os-theta" step="0.01" min="0">
+      </div>
+      <div class="block">
+        <span>Shock Type</span><br>
+        <label><input type="radio" name="os-branch" value="weak" checked> Weak Shock</label>
+        <label><input type="radio" name="os-branch" value="strong"> Strong Shock</label>
+      </div>
+      <button onclick="calculateObliqueShock()">Calculate Oblique Shock</button>
+      <p id="os-warning" class="warning"></p>
 
-            <h3>Results</h3>
-            <div class="results-grid">
-                <div class="result-item"><span class="label">Max θ:</span> <span id="max-theta-oblique-shock"></span></div>
-                <div class="result-item"><span class="label">β [deg]:</span> <span id="beta-oblique-shock"></span></div>
-                <div class="result-item"><span class="label">M₂:</span> <span id="M2-oblique-shock"></span></div>
-                <div class="result-item"><span class="label">P₂/P₁:</span> <span id="P2-P1-oblique-shock"></span></div>
-                <div class="result-item"><span class="label">T₂/T₁:</span> <span id="T2-T1-oblique-shock"></span></div>
-                <div class="result-item"><span class="label">ρ₂/ρ₁:</span> <span id="Rho2-Rho1-oblique-shock"></span></div>
-                <div class="result-item"><span class="label">P₀₂/P₀₁:</span> <span id="P02-P01-oblique-shock"></span></div>
-            </div>
-            <p class="error-message" id="oblique-shock-error"></p>
-        </section>
+      <h3>Results</h3>
+      <table class="results">
+        <tr><th>Max θ:</th><td id="os-theta-max">–</td></tr>
+        <tr><th>β [deg]:</th><td id="os-beta">–</td></tr>
+        <tr><th>M₂:</th><td id="os-M2">–</td></tr>
+        <tr><th>P₂/P₁:</th><td id="os-P2_P1">–</td></tr>
+        <tr><th>T₂/T₁:</th><td id="os-T2_T1">–</td></tr>
+        <tr><th>ρ₂/ρ₁:</th><td id="os-rho2_rho1">–</td></tr>
+        <tr><th>P₀₂/P₀₁:</th><td id="os-P02_P01">–</td></tr>
+      </table>
+    </section>
 
-        <!-- Prandtl-Meyer Expansion Section -->
-        <section class="card prandtl-meyer">
-            <h2>Prandtl-Meyer Expansion</h2>
-            <div class="input-group">
-                <label for="prandtl-meyer-input-type">Input Type</label>
-                <select id="prandtl-meyer-input-type">
-                    <option value="M">Mach Number (M)</option>
-                    <option value="nu">ν [degrees]</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="prandtl-meyer-input-value" id="prandtl-meyer-input-label">Mach Number (M)</label>
-                <input type="number" id="prandtl-meyer-input-value" value="2.0" min="1.0001" step="0.01">
-            </div>
-            <button class="calculate-btn" onclick="calculatePrandtlMeyer()">Calculate Prandtl-Meyer</button>
+    <section>
+      <h2>Prandtl-Meyer Expansion</h2>
+      <div class="block">
+        <label for="pm-input-type">Input Type</label>
+        <select id="pm-input-type" onchange="updatePmLabel()">
+          <option value="M">Mach Number (M)</option>
+          <option value="nu_deg">ν [degrees]</option>
+        </select>
+      </div>
+      <div class="block">
+        <label id="pm-input-label" for="pm-input-value">Mach Number (M)</label>
+        <input type="number" id="pm-input-value" step="0.0001" min="0">
+      </div>
+      <button onclick="calculatePrandtlMeyer()">Calculate Prandtl-Meyer</button>
 
-            <h3>Results</h3>
-            <div class="results-grid">
-                <div class="result-item"><span class="label">M:</span> <span id="prandtl-meyer-M"></span></div>
-                <div class="result-item"><span class="label">ν [deg]:</span> <span id="prandtl-meyer-nu"></span></div>
-            </div>
-            <p class="error-message" id="prandtl-meyer-error"></p>
-        </section>
-    </main>
+      <h3>Results</h3>
+      <table class="results">
+        <tr><th>M:</th><td id="pm-M">–</td></tr>
+        <tr><th>ν [deg]:</th><td id="pm-nu">–</td></tr>
+      </table>
+    </section>
+  </main>
 
-    <footer>
-        <p>&copy; 2023 Compressible Aerodynamics Calculator</p>
-        <p>Developed by an expert aerodynamicist and web developer for educational purposes.</p>
-    </footer>
+  <footer>
+    <p>© 2023 Compressible Aerodynamics Calculator</p>
+    <p>Developed by an expert aerodynamicist and web developer for educational purposes.</p>
+  </footer>
 
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
