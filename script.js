@@ -42,7 +42,7 @@ document.getElementById('gamma-input').addEventListener('input', (event) => {
 });
 
 // =======================================================
-// Aerodynamic Calculation Functions (Verified from previous step)
+// Aerodynamic Calculation Functions
 // =======================================================
 
 // --- Isentropic Flow Relations ---
@@ -451,7 +451,11 @@ function calculateObliqueShock() {
         // Clear all results
         Object.keys(calculateObliqueShockProperties(2, 45) || {}).forEach(key => {
             if (key !== 'theta_deg' && key !== 'M1n' && key !== 'M2n') { // Don't clear intermediate
-                document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase() + '-oblique-shock')?.textContent = 'N/A';
+                const elementId = key.replace(/([A-Z])/g, '-$1').toLowerCase() + '-oblique-shock';
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = 'N/A';
+                }
             }
         });
         document.getElementById('beta-oblique-shock').textContent = 'N/A';
@@ -462,7 +466,11 @@ function calculateObliqueShock() {
         displayError('oblique-shock-error', 'Deflection angle (θ) must be a non-negative number.');
         Object.keys(calculateObliqueShockProperties(2, 45) || {}).forEach(key => {
             if (key !== 'theta_deg' && key !== 'M1n' && key !== 'M2n') { // Don't clear intermediate
-                document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase() + '-oblique-shock')?.textContent = 'N/A';
+                const elementId = key.replace(/([A-Z])/g, '-$1').toLowerCase() + '-oblique-shock';
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = 'N/A';
+                }
             }
         });
         document.getElementById('beta-oblique-shock').textContent = 'N/A';
@@ -480,7 +488,11 @@ function calculateObliqueShock() {
         document.getElementById('beta-oblique-shock').textContent = 'N/A';
         Object.keys(calculateObliqueShockProperties(2, 45) || {}).forEach(key => {
             if (key !== 'theta_deg' && key !== 'M1n' && key !== 'M2n') {
-                document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase() + '-oblique-shock')?.textContent = 'N/A';
+                const elementId = key.replace(/([A-Z])/g, '-$1').toLowerCase() + '-oblique-shock';
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = 'N/A';
+                }
             }
         });
         return;
@@ -493,7 +505,11 @@ function calculateObliqueShock() {
         document.getElementById('beta-oblique-shock').textContent = 'N/A';
         Object.keys(calculateObliqueShockProperties(2, 45) || {}).forEach(key => {
             if (key !== 'theta_deg' && key !== 'M1n' && key !== 'M2n') {
-                document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase() + '-oblique-shock')?.textContent = 'N/A';
+                const elementId = key.replace(/([A-Z])/g, '-$1').toLowerCase() + '-oblique-shock';
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = 'N/A';
+                }
             }
         });
         return;
