@@ -10,7 +10,7 @@ try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.docu
 <title>Supersonic Airfoil Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <style>
 /* Layout: case tabs across the top, then control rail (left, sticky on desktop) + worked-solution column (right); stacks on phones. */
 :root{
@@ -21,9 +21,9 @@ try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.docu
   --mach:#7d8894;            /* Mach waves, guides, p = p_inf */
   --body:#24313d;            /* airfoil */
   --ok:#2f7d4f; --warn:#a15c00; --bad:#b3261e;
-  --f-display:"Saira Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-display:"Source Serif 4",Georgia,"Times New Roman",serif;
   --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --f-num:"Source Serif 4",Georgia,"Times New Roman",serif;  /* numbers: textbook serif with tabular lining figures */
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0e1318; --panel:#151c24; --ink:#e4e9ef; --muted:#9aa6b3; --line:#2a3441; --soft:#1b232d;
@@ -40,11 +40,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);fo
 [hidden]{display:none!important}
 .wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
-h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:.01em}
+h1{font-size:clamp(28px,4vw,40px);font-weight:600;letter-spacing:-.005em}
 h2{font-size:22px;font-weight:600}
 h3{font-size:17px;font-weight:600}
 p{margin:0}
-.eyebrow{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--accent);font-weight:600}
+.eyebrow{font-family:var(--f-body);text-transform:uppercase;letter-spacing:.1em;font-size:12.5px;color:var(--accent);font-weight:600}
 .lede{color:var(--muted);max-width:72ch}
 header{display:flex;flex-direction:column;gap:6px}
 .back{font-size:14px;color:var(--accent);text-decoration:none;font-weight:600}
@@ -55,7 +55,7 @@ header{display:flex;flex-direction:column;gap:6px}
 .case{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer;text-align:left;font:inherit}
 .case svg{flex:none;width:74px;height:30px}
 .case .t{display:flex;flex-direction:column;line-height:1.2;min-width:0}
-.case .t b{font-family:var(--f-display);font-size:18px;font-weight:600}
+.case .t b{font-family:var(--f-display);font-size:17px;font-weight:600}
 .case .t small{color:var(--muted);font-size:13px}
 .case[aria-selected=true]{border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
 .case[aria-selected=true] .t b{color:var(--accent)}
@@ -76,13 +76,13 @@ header{display:flex;flex-direction:column;gap:6px}
 .ctl label small{float:right;margin-left:8px;font-weight:400;color:var(--muted);font-size:12.5px}
 .row{display:flex;gap:10px;align-items:center}
 .row input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
-.row input[type=number]{width:86px;font-family:var(--f-mono);font-size:14px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft);color:var(--ink)}
+.row input[type=number]{width:86px;font-family:var(--f-num);font-size:14px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft);color:var(--ink)}
 input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{flex:1;border:0;background:transparent;color:var(--ink);font:600 13px var(--f-body);padding:7px 8px;cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--panel)}
 .derived{font-size:13px;color:var(--muted);background:var(--soft);border-radius:6px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
-.derived b{font-weight:600;color:var(--ink);font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.derived b{font-weight:600;color:var(--ink);font-family:var(--f-num);font-variant-numeric:lining-nums tabular-nums}
 .note{font-size:13.5px;color:var(--muted)}
 .sep{height:1px;background:var(--line)}
 .presets{display:flex;flex-wrap:wrap;gap:6px}
@@ -112,15 +112,15 @@ details.more .inner{display:flex;flex-direction:column;gap:12px}
 @media (max-width:640px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tile{background:var(--soft);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .tile .k{font-size:13px;color:var(--muted);font-weight:600}
-.tile .v{font-family:var(--f-mono);font-size:26px;font-weight:500;font-variant-numeric:tabular-nums}
-.tile .s{font-size:12.5px;color:var(--muted);font-family:var(--f-mono)}
+.tile .v{font-family:var(--f-num);font-size:28px;font-weight:500;font-variant-numeric:lining-nums tabular-nums}
+.tile .s{font-size:12.5px;color:var(--muted);font-family:var(--f-num)}
 
 /* tables */
 .tblwrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
 th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-weight:600;color:var(--muted);font-size:12.5px}
-td{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td{font-family:var(--f-num);font-variant-numeric:lining-nums tabular-nums}
 td:first-child,th:first-child,td.l,th.l{text-align:left;font-family:var(--f-body)}
 tfoot td{font-weight:600;border-top:2px solid var(--ink);border-bottom:0}
 tr.cur td{background:color-mix(in srgb,var(--accent) 9%,transparent)}
@@ -139,7 +139,7 @@ tr.pick:hover td{background:var(--soft)}
 .step .why{font-size:14px;color:var(--muted)}
 .calc{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:14px;align-items:baseline}
 .calc .q{color:var(--muted)}
-.calc .a{font-family:var(--f-mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.calc .a{font-family:var(--f-num);font-variant-numeric:lining-nums tabular-nums;overflow-wrap:anywhere}
 .calc .a em{font-family:var(--f-body);font-style:normal;color:var(--muted);font-size:13px}
 .calc .hl{color:var(--accent);font-weight:500}
 .prose{max-width:72ch;display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -152,7 +152,8 @@ tr.pick:hover td{background:var(--soft)}
 /* chart */
 .axis{stroke:var(--muted);stroke-width:1}
 .gridl{stroke:var(--line);stroke-width:1}
-.tick{fill:var(--muted);font:12px var(--f-mono)}
+.tick{fill:var(--muted);font:12.5px var(--f-num)}
+svg text{font-variant-numeric:lining-nums tabular-nums}
 .axlab{fill:var(--muted);font:13px var(--f-body)}
 footer{font-size:13px;color:var(--muted)}
 sub,sup{font-size:.72em;line-height:0}
@@ -278,7 +279,7 @@ sub,sup{font-size:.72em;line-height:0}
       </section>
 
       <section class="card" aria-labelledby="h-cmp">
-        <div class="headrow"><h2 id="h-cmp">The three cases side by side</h2><span class="legend">Same M<sub>∞</sub>, α and γ; each case keeps its own geometry. Click a row to switch.</span></div>
+        <div class="headrow"><h2 id="h-cmp">The three cases side by side</h2><span class="legend"><i style="font-style:normal">Same M<sub>∞</sub>, α and γ; each case keeps its own geometry. Click a row to switch.</i></span></div>
         <div class="tblwrap"><table id="cmpTable"></table></div>
       </section>
 
@@ -739,7 +740,7 @@ function drawFigure(sol){
   const mk=(id,col)=>`<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="${col}"/></marker>`;
   let s=`<defs><clipPath id="clipF"><rect x="0" y="0" width="${W}" height="${H}"/></clipPath>${mk('arF','var(--muted)')}${mk('arC','var(--comp)')}${mk('arE','var(--exp)')}${mk('arN','var(--mach)')}${mk('arK','var(--accent)')}</defs><g clip-path="url(#clipF)">`;
   for(const y of [70,150,280,360]) s+=ln([20,y],[120,y],'stroke="var(--muted)" stroke-width="1.5"','marker-end="url(#arF)"');
-  s+=`<text x="20" y="${oy+5}" class="axlab" style="font-family:var(--f-mono)">M∞ = ${f(S.M,2)}</text>`;
+  s+=`<text x="20" y="${oy+5}" class="axlab" style="font-family:var(--f-num)">M∞ = ${f(S.M,2)}</text>`;
   const LE=P(0,0);
   s+=ln(LE,[LE[0]+120,LE[1]],'stroke="var(--mach)" stroke-width="1" stroke-dasharray="3 4"');
   if(Math.abs(a)>0.3*D){const r=90,e=ray(LE,-a,r);s+=`<path d="M${LE[0]+r},${LE[1]} A${r},${r} 0 0 ${a>0?1:0} ${e[0].toFixed(1)},${e[1].toFixed(1)}" fill="none" stroke="var(--accent)" stroke-width="1.2"/><text x="${LE[0]+r+6}" y="${LE[1]+(a>0?16:-6)}" class="axlab" style="fill:var(--accent)">α</text>`;}
@@ -782,7 +783,7 @@ function drawFigure(sol){
       const mid=[(A[0]+B[0])/2,(A[1]+B[1])/2], d=len+(F.side==='base'?66:38);
       const lx=mid[0]+ns[0]*d, ly=mid[1]+ns[1]*d;
       const l2=F.side==='base'?'base (prescribed)':'M '+f(F.M,3);
-      s+=`<g font-family="var(--f-mono)" font-size="12.5"><rect x="${(lx-56).toFixed(1)}" y="${(ly-17).toFixed(1)}" width="112" height="32" rx="4" fill="var(--panel)" fill-opacity=".9" stroke="var(--line)"/><text x="${lx.toFixed(1)}" y="${(ly-3).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-weight="600">${F.id}: p/p∞ ${f(F.P,3)}</text><text x="${lx.toFixed(1)}" y="${(ly+11).toFixed(1)}" text-anchor="middle" fill="var(--muted)">${l2}</text></g>`;
+      s+=`<g style="font-family:var(--f-num)" font-size="12.5"><rect x="${(lx-56).toFixed(1)}" y="${(ly-17).toFixed(1)}" width="112" height="32" rx="4" fill="var(--panel)" fill-opacity=".9" stroke="var(--line)"/><text x="${lx.toFixed(1)}" y="${(ly-3).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-weight="600">${F.id}: p/p∞ ${f(F.P,3)}</text><text x="${lx.toFixed(1)}" y="${(ly+11).toFixed(1)}" text-anchor="middle" fill="var(--muted)">${l2}</text></g>`;
     });
     if(isFinite(sol.xcp)&&Math.hypot(sol.cl,sol.cd)>1e-6){
       const mag=Math.hypot(sol.cl,sol.cd), sc=90/Math.max(mag,0.05);
@@ -791,7 +792,7 @@ function drawFigure(sol){
       s+=ln(base,tip,'stroke="var(--accent)" stroke-width="2.6"','marker-end="url(#arK)"');
       s+=ln(base,[base[0],base[1]-sol.cl*sc],'stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3"');
       s+=ln(base,[base[0]+sol.cd*sc,base[1]],'stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3"');
-      s+=`<text x="${(tip[0]+8).toFixed(1)}" y="${(tip[1]+4).toFixed(1)}" font-family="var(--f-body)" font-size="13" font-weight="600" fill="var(--accent)">R′</text>`;
+      s+=`<text x="${(tip[0]+8).toFixed(1)}" y="${(tip[1]+4).toFixed(1)}" style="font-family:var(--f-body)" font-size="13" font-weight="600" fill="var(--accent)">R′</text>`;
     }
   }
   s+='</g>';
