@@ -4,12 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MAE3293 Compressible Aerodynamics Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main>
     <header class="main-header">
-      <h1>MAE3293 Compressible Aerodynamics Calculator</h1>
+      <div>
+        <p class="eyebrow">MAE 3293 · Fundamentals of Aerodynamics · High-speed flow</p>
+        <h1>Compressible Aerodynamics Calculator</h1>
+      </div>
       <div class="controls-group">
         <div class="font-size-control">
           <button id="font-decrease" title="Decrease font size">A-</button>
@@ -166,8 +172,8 @@
         <svg id="ob-shockDiagram" width="640" height="400" viewBox="0 0 640 400">
           <line x1="80" y1="320" x2="260" y2="320" stroke="var(--text-muted)" stroke-width="3" marker-end="url(#arrow)" />
           <text x="100" y="300" font-size="18" fill="var(--text-muted)">M₁</text>
-          <line id="ob-wedgeBase" x1="280" y1="320" x2="500" y2="320" stroke="var(--accent)" stroke-width="6" />
-          <line id="ob-wedgeRamp" x1="280" y1="320" x2="420" y2="280" stroke="var(--accent)" stroke-width="6" />
+          <line id="ob-wedgeBase" x1="280" y1="320" x2="500" y2="320" stroke="var(--body)" stroke-width="6" />
+          <line id="ob-wedgeRamp" x1="280" y1="320" x2="420" y2="280" stroke="var(--body)" stroke-width="6" />
           <line id="ob-shockLine" x1="280" y1="320" x2="520" y2="200" stroke="var(--danger)" stroke-width="4" />
           <path id="ob-thetaArc" d="" stroke="var(--accent)" stroke-width="2" fill="none" />
           <text id="ob-thetaLabel" x="0" y="0" font-size="15" fill="var(--accent)">θ</text>

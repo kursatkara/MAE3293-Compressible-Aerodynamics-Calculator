@@ -303,9 +303,9 @@ function updateWedgeDiagram(g, M1, delta, alpha, lower, upper) {
 
     // --- Draw Wedge Body ---
     // Upper surface of wedge
-    svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(deltaRad)}" y2="${y0 - L * Math.sin(deltaRad)}" stroke="var(--accent)" stroke-width="4" />`;
+    svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(deltaRad)}" y2="${y0 - L * Math.sin(deltaRad)}" stroke="var(--body)" stroke-width="4" />`;
     // Lower surface of wedge
-    svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(-deltaRad)}" y2="${y0 - L * Math.sin(-deltaRad)}" stroke="var(--accent)" stroke-width="4" />`;
+    svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(-deltaRad)}" y2="${y0 - L * Math.sin(-deltaRad)}" stroke="var(--body)" stroke-width="4" />`;
     // 0-degree horizontal (wedge centerline)
     svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L}" y2="${y0}" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4" />`;
 
@@ -348,9 +348,9 @@ function updateWedgeDiagram(g, M1, delta, alpha, lower, upper) {
         const midFanAngle = (firstFanAngle + lastFanAngle) / 2;
         
         // Draw 3 lines for the fan
-        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(firstFanAngle)}" y2="${y0 - L * Math.sin(firstFanAngle)}" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 3" />`;
-        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(midFanAngle)}" y2="${y0 - L * Math.sin(midFanAngle)}" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 3" />`;
-        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(lastFanAngle)}" y2="${y0 - L * Math.sin(lastFanAngle)}" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 3" />`;
+        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(firstFanAngle)}" y2="${y0 - L * Math.sin(firstFanAngle)}" stroke="var(--exp)" stroke-width="1.5" />`;
+        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(midFanAngle)}" y2="${y0 - L * Math.sin(midFanAngle)}" stroke="var(--exp)" stroke-width="1.5" />`;
+        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(lastFanAngle)}" y2="${y0 - L * Math.sin(lastFanAngle)}" stroke="var(--exp)" stroke-width="1.5" />`;
     }
     // If "Aligned", do nothing (M1 line is already parallel to upper surface).
 }
