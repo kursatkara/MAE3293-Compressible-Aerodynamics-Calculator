@@ -14,7 +14,7 @@ try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.docu
 <style>
 /* Layout: case tabs across the top, then control rail (left, sticky on desktop) + worked-solution column (right); stacks on phones. */
 :root{
-  --bg:#eef0f2; --panel:#ffffff; --ink:#152029; --muted:#55616e; --line:#d3d9e0; --soft:#f5f7f9;
+  --bg:#fcfcfb; --panel:#fcfcfb; --ink:#152029; --muted:#55616e; --line:#d3d9e0; --soft:#f5f7f9;
   --accent:#d24a0f;          /* OSU-orange family, brand/highlights */
   --comp:#c0262d;            /* compression (shock), p > p_inf */
   --exp:#1f5fae;             /* expansion (Prandtl-Meyer), p < p_inf */
@@ -26,11 +26,11 @@ try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.docu
   --f-num:"Source Serif 4",Georgia,"Times New Roman",serif;  /* numbers: textbook serif with tabular lining figures */
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0e1318; --panel:#151c24; --ink:#e4e9ef; --muted:#9aa6b3; --line:#2a3441; --soft:#1b232d;
+  --bg:#12171d; --panel:#12171d; --ink:#e4e9ef; --muted:#9aa6b3; --line:#2a3441; --soft:#1b232d;
   --accent:#ff7d3b; --comp:#ff6a60; --exp:#6aa9ff; --mach:#7f8b98; --body:#c9d3dd;
   --ok:#5cc28a; --warn:#e5a54a; --bad:#ff7b72; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0e1318; --panel:#151c24; --ink:#e4e9ef; --muted:#9aa6b3; --line:#2a3441; --soft:#1b232d;
+  --bg:#12171d; --panel:#12171d; --ink:#e4e9ef; --muted:#9aa6b3; --line:#2a3441; --soft:#1b232d;
   --accent:#ff7d3b; --comp:#ff6a60; --exp:#6aa9ff; --mach:#7f8b98; --body:#c9d3dd;
   --ok:#5cc28a; --warn:#e5a54a; --bad:#ff7b72; color-scheme:dark}
 
@@ -51,21 +51,22 @@ header{display:flex;flex-direction:column;gap:6px}
 .back:hover{text-decoration:underline}
 
 /* case tabs */
-.cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.case{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer;text-align:left;font:inherit}
+.cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 24px}
+.case{display:flex;align-items:center;gap:12px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);border-radius:0;padding:10px 4px;cursor:pointer;text-align:left;font:inherit}
 .case svg{flex:none;width:74px;height:30px}
 .case .t{display:flex;flex-direction:column;line-height:1.2;min-width:0}
 .case .t b{font-family:var(--f-display);font-size:17px;font-weight:600}
 .case .t small{color:var(--muted);font-size:13px}
-.case[aria-selected=true]{border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.case[aria-selected=true]{box-shadow:inset 0 -3px 0 var(--accent)}
 .case[aria-selected=true] .t b{color:var(--accent)}
-.case:hover{border-color:var(--accent)}
+.case:hover .t b{color:var(--accent)}
 @media (max-width:640px){.cases{grid-template-columns:minmax(0,1fr)}.case svg{width:60px}}
 
 .grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:920px){.grid{grid-template-columns:minmax(0,1fr)}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
-.rail{position:sticky;top:max(12px,env(safe-area-inset-top,0px))}
+.card{background:transparent;border:0;border-top:2px solid var(--ink);border-radius:0;padding:14px 0 0;display:flex;flex-direction:column;gap:14px;min-width:0}
+.main{gap:36px!important}
+.rail{position:sticky;top:max(12px,env(safe-area-inset-top,0px));border:1px solid var(--line);border-top:2px solid var(--ink);padding:14px 16px 16px}
 @media (max-width:920px){.rail{position:static}}
 .main{display:flex;flex-direction:column;gap:20px;min-width:0}
 
@@ -76,25 +77,25 @@ header{display:flex;flex-direction:column;gap:6px}
 .ctl label small{float:right;margin-left:8px;font-weight:400;color:var(--muted);font-size:12.5px}
 .row{display:flex;gap:10px;align-items:center}
 .row input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
-.row input[type=number]{width:86px;font-family:var(--f-num);font-size:14px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft);color:var(--ink)}
+.row input[type=number]{width:86px;font-family:var(--f-num);font-size:14px;padding:5px 6px;border:1px solid var(--line);border-radius:0;background:var(--soft);color:var(--ink)}
 input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg{display:flex;border:1px solid var(--line);border-radius:0;overflow:hidden}
 .seg button{flex:1;border:0;background:transparent;color:var(--ink);font:600 13px var(--f-body);padding:7px 8px;cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--panel)}
-.derived{font-size:13px;color:var(--muted);background:var(--soft);border-radius:6px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
+.derived{font-size:13px;color:var(--muted);background:transparent;border-left:2px solid var(--line);border-radius:0;padding:2px 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
 .derived b{font-weight:600;color:var(--ink);font-family:var(--f-num);font-variant-numeric:lining-nums tabular-nums}
 .note{font-size:13.5px;color:var(--muted)}
 .sep{height:1px;background:var(--line)}
 .presets{display:flex;flex-wrap:wrap;gap:6px}
-.presets button,.mini{border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:5px 11px;font:13px var(--f-body);cursor:pointer}
+.presets button,.mini{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:0;padding:5px 10px;font:13px var(--f-body);cursor:pointer}
 .presets button:hover,.mini:hover{border-color:var(--accent)}
-details.more{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+details.more{border:0;border-top:1px solid var(--line);border-radius:0;padding:10px 0 0}
 details.more summary{cursor:pointer;font-weight:600;font-size:14px}
 details.more[open] summary{margin-bottom:10px}
 details.more .inner{display:flex;flex-direction:column;gap:12px}
 
 /* banner */
-.banner{border-radius:8px;padding:10px 14px;font-size:14.5px;border:1px solid;display:flex;flex-direction:column;gap:4px}
+.banner{border-radius:0;padding:8px 14px;font-size:14.5px;border:0;border-left:4px solid;display:flex;flex-direction:column;gap:4px}
 .banner.bad{border-color:var(--bad);color:var(--bad);background:color-mix(in srgb,var(--bad) 8%,transparent)}
 .banner.warn{border-color:var(--warn);color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,transparent)}
 .banner b{font-weight:700}
@@ -110,7 +111,7 @@ details.more .inner{display:flex;flex-direction:column;gap:12px}
 /* tiles */
 .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 @media (max-width:640px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.tile{background:var(--soft);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile{background:transparent;border-left:1px solid var(--line);border-radius:0;padding:4px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .tile .k{font-size:13px;color:var(--muted);font-weight:600}
 .tile .v{font-family:var(--f-num);font-size:28px;font-weight:500;font-variant-numeric:lining-nums tabular-nums}
 .tile .s{font-size:12.5px;color:var(--muted);font-family:var(--f-num)}
@@ -126,15 +127,15 @@ tfoot td{font-weight:600;border-top:2px solid var(--ink);border-bottom:0}
 tr.cur td{background:color-mix(in srgb,var(--accent) 9%,transparent)}
 tr.pick{cursor:pointer}
 tr.pick:hover td{background:var(--soft)}
-.chip{display:inline-block;font:600 12px var(--f-body);padding:1px 8px;border-radius:999px;border:1px solid}
+.chip{display:inline-block;font:600 11.5px var(--f-body);letter-spacing:.07em;text-transform:uppercase;padding:0;border:0;border-radius:0}
 .chip.shock{color:var(--comp);border-color:var(--comp)}
 .chip.exp{color:var(--exp);border-color:var(--exp)}
 .chip.none,.chip.base{color:var(--mach);border-color:var(--mach)}
 
 /* worked steps */
-.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 32px}
 @media (max-width:760px){.steps{grid-template-columns:minmax(0,1fr)}}
-.step{border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.step{border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 0 0;display:flex;flex-direction:column;gap:8px;min-width:0}
 .step .hd{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
 .step .why{font-size:14px;color:var(--muted)}
 .calc{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:14px;align-items:baseline}
@@ -783,7 +784,7 @@ function drawFigure(sol){
       const mid=[(A[0]+B[0])/2,(A[1]+B[1])/2], d=len+(F.side==='base'?66:38);
       const lx=mid[0]+ns[0]*d, ly=mid[1]+ns[1]*d;
       const l2=F.side==='base'?'base (prescribed)':'M '+f(F.M,3);
-      s+=`<g style="font-family:var(--f-num)" font-size="12.5"><rect x="${(lx-56).toFixed(1)}" y="${(ly-17).toFixed(1)}" width="112" height="32" rx="4" fill="var(--panel)" fill-opacity=".9" stroke="var(--line)"/><text x="${lx.toFixed(1)}" y="${(ly-3).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-weight="600">${F.id}: p/p∞ ${f(F.P,3)}</text><text x="${lx.toFixed(1)}" y="${(ly+11).toFixed(1)}" text-anchor="middle" fill="var(--muted)">${l2}</text></g>`;
+      s+=`<g style="font-family:var(--f-num)" font-size="12.5"><rect x="${(lx-56).toFixed(1)}" y="${(ly-17).toFixed(1)}" width="112" height="32" rx="0" fill="var(--panel)" fill-opacity=".9" stroke="var(--line)"/><text x="${lx.toFixed(1)}" y="${(ly-3).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-weight="600">${F.id}: p/p∞ ${f(F.P,3)}</text><text x="${lx.toFixed(1)}" y="${(ly+11).toFixed(1)}" text-anchor="middle" fill="var(--muted)">${l2}</text></g>`;
     });
     if(isFinite(sol.xcp)&&Math.hypot(sol.cl,sol.cd)>1e-6){
       const mag=Math.hypot(sol.cl,sol.cd), sc=90/Math.max(mag,0.05);
