@@ -750,6 +750,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const navButtons = document.querySelectorAll(".nav-btn");
   const panels = document.querySelectorAll(".calculator-panel");
   navButtons.forEach(btn => {
+    if (!btn.dataset.calculator) return; // plain links (e.g. Diamond Airfoil page)
     btn.addEventListener("click", () => {
       navButtons.forEach(b => b.classList.remove("active"));
       panels.forEach(p => p.classList.remove("active"));
