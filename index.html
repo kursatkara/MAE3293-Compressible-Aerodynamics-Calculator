@@ -120,15 +120,9 @@
       </section>
 
       <section class="diagram-section">
-        <svg id="ns-diagram" width="640" height="200" viewBox="0 0 640 200">
-          <line x1="80" y1="100" x2="310" y2="100" stroke="var(--text-muted)" stroke-width="3" marker-end="url(#arrow)" />
-          <line x1="330" y1="100" x2="500" y2="100" stroke="var(--text-muted)" stroke-width="3" marker-end="url(#arrow-short)" />
-          <line id="ns-shockLine" x1="320" y1="30" x2="320" y2="170" stroke="var(--danger)" stroke-width="4" />
-          <text x="180" y="80" font-size="18" fill="var(--text-muted)">M₁</text>
-          <text x="415" y="80" font-size="18" fill="var(--text-muted)">M₂</text>
-          <text id="ns-M1-label" x="180" y="120" font-size="15" fill="var(--text-main)"></text>
-          <text id="ns-M2-label" x="415" y="120" font-size="15" fill="var(--text-main)"></text>
-        </svg>
+        <h2>Flow Across the Shock</h2>
+        <svg id="ns-diagram" class="fig" viewBox="0 0 640 290" role="img" aria-label="Normal shock: upstream and downstream flow"></svg>
+        <p class="diagram-caption">Arrow length is proportional to flow speed. Mass conservation across the shock gives u₂/u₁ = ρ₁/ρ₂, so the flow slows sharply while pressure, temperature and density jump.</p>
       </section>
     </section>
 
@@ -170,20 +164,8 @@
 
       <section class="diagram-section">
         <h2>Wave Geometry</h2>
-        <svg id="ob-shockDiagram" width="640" height="400" viewBox="0 0 640 400">
-          <line x1="80" y1="320" x2="260" y2="320" stroke="var(--text-muted)" stroke-width="3" marker-end="url(#arrow)" />
-          <text x="100" y="300" font-size="18" fill="var(--text-muted)">M₁</text>
-          <line id="ob-wedgeBase" x1="280" y1="320" x2="500" y2="320" stroke="var(--body)" stroke-width="6" />
-          <line id="ob-wedgeRamp" x1="280" y1="320" x2="420" y2="280" stroke="var(--body)" stroke-width="6" />
-          <line id="ob-shockLine" x1="280" y1="320" x2="520" y2="200" stroke="var(--danger)" stroke-width="4" />
-          <path id="ob-thetaArc" d="" stroke="var(--accent)" stroke-width="2" fill="none" />
-          <text id="ob-thetaLabel" x="0" y="0" font-size="15" fill="var(--accent)">θ</text>
-          <path id="ob-betaArc" d="" stroke="var(--danger)" stroke-width="2" fill="none" />
-          <text id="ob-betaLabel" x="0" y="0" font-size="15" fill="var(--danger)">β</text>
-        </svg>
-        <p class="diagram-caption">
-          Geometry: β is the shock angle; θ is the flow deflection angle.
-        </p>
+        <svg id="ob-shockDiagram" class="fig" viewBox="0 0 640 380" role="img" aria-label="Oblique shock on a compression corner"></svg>
+        <p class="diagram-caption">Drawn to scale. Streamlines turn through θ at the shock; β is measured from the upstream flow. Only the normal component M₁ₙ = M₁ sin β is processed by the shock, which is why M₂ stays supersonic for the weak solution.</p>
       </section>
     </section>
 
@@ -248,7 +230,8 @@
       <!-- Diagram -->
       <section class="diagram-section">
         <h2>Wave Geometry</h2>
-        <svg id="wa-diagram" width="640" height="400" viewBox="0 0 640 400"></svg>
+        <svg id="wa-diagram" class="fig" viewBox="0 0 640 400" role="img" aria-label="Wedge airfoil with shocks, expansion fan and surface pressures"></svg>
+        <p class="diagram-caption">Drawn to scale with the freestream horizontal and the wedge pitched nose-up by α. Arrows show the pressure pushing on each face, length ∝ p/p₁ (red p &gt; p₁, blue p &lt; p₁).</p>
       </section>
 
       <!-- Results: Intermediate Steps -->

@@ -487,13 +487,9 @@ svg {
 svg text {
   font-family: var(--f-body);
   font-variant-numeric: lining-nums tabular-nums;
-  dominant-baseline: middle;
-  text-anchor: middle;
   user-select: none;
 }
-#ob-thetaLabel, #ob-betaLabel {
-  text-anchor: start;
-}
+svg.fig { display: block; width: 100%; height: auto; overflow: hidden; }
 .diagram-caption {
   font-size: 0.92rem;
   color: var(--text-muted);

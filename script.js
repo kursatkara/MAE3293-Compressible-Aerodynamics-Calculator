@@ -244,115 +244,195 @@ const prandtlMeyer = {
 // === Diagram Updaters ===================================================
 // ========================================================================
 
-function updateNormalShockDiagram(M1, M2) {
-  updateText("ns-M1-label", M1, 2);
-  updateText("ns-M2-label", M2, 2);
+// Figures share the visual language of supersonic-airfoils.html:
+// shocks red, expansion fans blue, Mach waves grey dashed, bodies in the
+// body color, region data in small square label boxes, all drawn to scale.
+
+const FIG = {
+  n(v, d) { return isFinite(v) ? v.toFixed(d).replace("-", "−") : "–"; },
+  defs(id) {
+    const mk = (name, col, size = 7) =>
+      `<marker id="${id}-${name}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="${size}" markerHeight="${size}" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="${col}"/></marker>`;
+    return `<defs>${mk("m", "var(--text-muted)")}${mk("k", "var(--text-main)")}${mk("c", "var(--danger)", 6)}${mk("e", "var(--exp)", 6)}${mk("a", "var(--accent)", 6)}</defs>`;
+  },
+  line(x1, y1, x2, y2, stroke, w = 1.5, extra = "") {
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${stroke}" stroke-width="${w}" ${extra}/>`;
+  },
+  text(x, y, str, o = {}) {
+    const a = o.anchor || "middle", sz = o.size || 13, fill = o.fill || "var(--text-main)", wt = o.weight || 400;
+    const fam = o.num ? "var(--f-num)" : "var(--f-body)";
+    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" style="font-family:${fam};font-size:${sz}px;font-weight:${wt};text-anchor:${a};dominant-baseline:middle" fill="${fill}">${str}</text>`;
+  },
+  // Square label box: first line bold, following lines muted.
+  box(x, y, lines, anchor = "middle") {
+    const w = Math.max(...lines.map(l => l.replace(/<[^>]+>/g, "").length)) * 6.9 + 16, h = lines.length * 16 + 8;
+    const x0 = anchor === "start" ? x : anchor === "end" ? x - w : x - w / 2, y0 = y - h / 2;
+    let s = `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${w.toFixed(1)}" height="${h}" fill="var(--card)" fill-opacity=".92" stroke="var(--border)"/>`;
+    lines.forEach((l, i) => {
+      s += FIG.text(x0 + 8, y0 + 12 + i * 16, l, { anchor: "start", size: 12.5, num: true, weight: i === 0 ? 600 : 400, fill: i === 0 ? "var(--text-main)" : "var(--text-muted)" });
+    });
+    return s;
+  },
+  // Arc centred at (cx,cy) from angle a1 to a2 (radians, counter-clockwise positive, y up)
+  arc(cx, cy, r, a1, a2, stroke) {
+    const p = a => [cx + r * Math.cos(a), cy - r * Math.sin(a)];
+    const [x1, y1] = p(a1), [x2, y2] = p(a2);
+    const sweep = a2 > a1 ? 0 : 1;
+    return `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 0 ${sweep} ${x2.toFixed(1)},${y2.toFixed(1)}" fill="none" stroke="${stroke}" stroke-width="1.4"/>`;
+  },
+  message(svg, msg) {
+    const vb = svg.viewBox.baseVal;
+    svg.innerHTML = FIG.text(vb.width / 2, vb.height / 2, msg, { fill: "var(--text-muted)", size: 14 });
+  }
+};
+
+// --- Normal shock: velocity arrows scaled by u2/u1 = rho1/rho2 ---
+function updateNormalShockDiagram(M1, r) {
+  const svg = document.getElementById("ns-diagram");
+  if (!svg) return;
+  if (!isFinite(M1) || !r) { FIG.message(svg, "Enter a valid input and press Compute."); return; }
+  const id = "ns", xs = 330, top = 40, bot = 200;
+  const u21 = 1 / r.rho2rho1, L1 = 230, L2 = Math.max(L1 * u21, 14);
+  let s = FIG.defs(id);
+  // downstream region tint
+  s += `<rect x="${xs}" y="${top}" width="${640 - xs - 20}" height="${bot - top}" fill="var(--danger)" fill-opacity=".05"/>`;
+  s += FIG.text(30, 22, "1 · upstream", { anchor: "start", weight: 600 });
+  s += FIG.text(xs + 16, 22, "2 · downstream", { anchor: "start", weight: 600 });
+  // velocity arrows
+  [70, 120, 170].forEach(y => {
+    s += FIG.line(xs - 20 - L1, y, xs - 20, y, "var(--text-main)", 2, `marker-end="url(#${id}-k)"`);
+    s += FIG.line(xs + 16, y, xs + 16 + L2, y, "var(--text-main)", 2, `marker-end="url(#${id}-k)"`);
+  });
+  // shock
+  s += FIG.line(xs, top - 6, xs, bot + 6, "var(--danger)", 4);
+  s += FIG.text(xs - 8, bot + 22, "normal shock", { anchor: "end", fill: "var(--danger)", size: 12.5, weight: 600 });
+  // data
+  s += FIG.box(30, 272, [`M₁ = ${FIG.n(M1, 3)}`, `u₁ (reference)`, `p₁, T₁, ρ₁, p₀₁`], "start");
+  s += FIG.box(xs + 16, 272, [`M₂ = ${FIG.n(r.M2, 3)}`, `u₂/u₁ = ${FIG.n(u21, 3)}`, `p₂/p₁ = ${FIG.n(r.p2p1, 3)}  ·  T₂/T₁ = ${FIG.n(r.T2T1, 3)}`, `ρ₂/ρ₁ = ${FIG.n(r.rho2rho1, 3)}  ·  p₀₂/p₀₁ = ${FIG.n(r.p02p01, 4)}`], "start");
+  svg.setAttribute("viewBox", "0 0 640 318");
+  svg.innerHTML = s;
 }
 
-function updateObliqueDiagram(thetaDeg, betaDeg) {
-  const x0 = 280, y0 = 320;
-  const Lbase = 220, Lwedge = 150;
-  const isValidTheta = !isNaN(thetaDeg) && thetaDeg > 0;
-  const thetaRad = isValidTheta ? deg2rad(thetaDeg) : 0;
-  
-  setVisible("ob-wedgeBase", isValidTheta);
-  setVisible("ob-wedgeRamp", isValidTheta);
-  setVisible("ob-thetaArc", isValidTheta);
-  setVisible("ob-thetaLabel", isValidTheta);
-
-  if (isValidTheta) {
-    document.getElementById("ob-wedgeBase").setAttribute("x2", x0 + Lbase);
-    document.getElementById("ob-wedgeRamp").setAttribute("x2", x0 + Lwedge * Math.cos(thetaRad));
-    document.getElementById("ob-wedgeRamp").setAttribute("y2", y0 - Lwedge * Math.sin(thetaRad));
-    document.getElementById("ob-thetaArc").setAttribute("d", arcPath(x0, y0, 40, 0, thetaRad));
-    document.getElementById("ob-thetaLabel").setAttribute("x", x0 + 135 * Math.cos(thetaRad / 2));
-    document.getElementById("ob-thetaLabel").setAttribute("y", y0 - 135 * Math.sin(thetaRad / 2));
-    document.getElementById("ob-thetaLabel").textContent = `θ=${thetaDeg.toFixed(1)}°`;
+// --- Oblique shock on a compression corner, to scale ---
+function updateObliqueDiagram(thetaDeg, betaDeg, r) {
+  const svg = document.getElementById("ob-shockDiagram");
+  if (!svg) return;
+  const okT = isFinite(thetaDeg) && thetaDeg >= 0, okB = isFinite(betaDeg) && betaDeg > 0;
+  if (!okT && !okB) { FIG.message(svg, "Enter two of M₁, θ, β and press Compute."); return; }
+  const id = "ob", W = 640, H = 380, cx = 230, cy = 300, x0 = 20;
+  const th = okT ? deg2rad(thetaDeg) : 0, be = okB ? deg2rad(betaDeg) : NaN;
+  const P = (r_, a) => [cx + r_ * Math.cos(a), cy - r_ * Math.sin(a)];
+  let s = FIG.defs(id);
+  // body: flat wall then ramp at theta
+  const rampLen = 460, re = P(rampLen, th);
+  s += `<polygon points="${x0},${cy} ${cx},${cy} ${re[0].toFixed(1)},${re[1].toFixed(1)} ${re[0].toFixed(1)},${H} ${x0},${H}" fill="var(--body)" fill-opacity=".12" stroke="none"/>`;
+  s += `<polyline points="${x0},${cy} ${cx},${cy} ${re[0].toFixed(1)},${re[1].toFixed(1)}" fill="none" stroke="var(--body)" stroke-width="3" stroke-linejoin="round"/>`;
+  s += FIG.line(cx, cy, cx + 170, cy, "var(--text-muted)", 1, 'stroke-dasharray="4 4"');
+  // streamlines: horizontal upstream, turned by theta behind the shock
+  if (okB) {
+    [45, 95, 145, 195].forEach(h => {
+      const yi = cy - h, xi = cx + h / Math.tan(be);
+      const xEnd = Math.min(xi, W - 10);
+      const xm = x0 + 0.55 * (Math.min(xEnd, cx + 30) - x0);
+      s += FIG.line(x0, yi, xm, yi, "var(--text-muted)", 1.3, `marker-end="url(#${id}-m)"`);
+      s += FIG.line(xm, yi, xEnd, yi, "var(--text-muted)", 1.3);
+      if (xi < W - 10) {
+        const L = 400, ex = xi + L * Math.cos(th), ey = yi - L * Math.sin(th);
+        s += FIG.line(xi, yi, ex, ey, "var(--text-muted)", 1.3);
+      }
+    });
+    // shock
+    const Ls = Math.min((cy - 14) / Math.sin(be), (W - 10 - cx) / Math.cos(be));
+    const se = P(Ls, be);
+    s += FIG.line(cx, cy, se[0], se[1], "var(--danger)", 3);
+    // velocity decomposition at a point on the shock: V1 = tangential + normal
+    if (r && isFinite(r.Mn1)) {
+      const q = P(0.5 * Ls, be), V = 90;
+      const tail = [q[0] - V, q[1]];
+      const tEnd = [tail[0] + V * Math.cos(be) * Math.cos(be), tail[1] - V * Math.cos(be) * Math.sin(be)];
+      s += FIG.line(tail[0], tail[1], q[0], q[1], "var(--text-main)", 2, `marker-end="url(#${id}-k)"`);
+      s += FIG.line(tail[0], tail[1], tEnd[0], tEnd[1], "var(--accent)", 1.6, `stroke-dasharray="4 3" marker-end="url(#${id}-a)"`);
+      s += FIG.line(tEnd[0], tEnd[1], q[0], q[1], "var(--accent)", 2, `marker-end="url(#${id}-a)"`);
+      s += FIG.text(tail[0] - 6, tail[1], "V₁", { anchor: "end", size: 13, weight: 600 });
+      s += FIG.text(tEnd[0] - 6, tEnd[1] - 12, `M₁ₙ = M₁ sin β = ${FIG.n(r.Mn1, 3)}`, { anchor: "end", size: 12.5, fill: "var(--accent)", num: true, weight: 600 });
+    }
+    // beta arc and label
+    s += FIG.arc(cx, cy, 120, 0, be, "var(--danger)");
+    const bl = P(134, be * 0.55);
+    s += FIG.text(bl[0], bl[1], `β = ${FIG.n(betaDeg, 2)}°`, { anchor: "start", fill: "var(--danger)", num: true, weight: 600 });
   }
-
-  const isValidBeta = !isNaN(betaDeg) && betaDeg > 0;
-  setVisible("ob-shockLine", isValidBeta);
-  setVisible("ob-betaArc", isValidBeta);
-  setVisible("ob-betaLabel", isValidBeta);
-
-  if (isValidBeta) {
-    const Lshock = 220;
-    const betaRad = deg2rad(betaDeg);
-    document.getElementById("ob-shockLine").setAttribute("x2", x0 + Lshock * Math.cos(betaRad));
-    document.getElementById("ob-shockLine").setAttribute("y2", y0 - Lshock * Math.sin(betaRad));
-    document.getElementById("ob-betaArc").setAttribute("d", arcPath(x0, y0, 60, 0, betaRad));
-    document.getElementById("ob-betaLabel").setAttribute("x", x0 + 160 * Math.cos(betaRad / 2));
-    document.getElementById("ob-betaLabel").setAttribute("y", y0 - 160 * Math.sin(betaRad / 2));
-    document.getElementById("ob-betaLabel").textContent = `β=${betaDeg.toFixed(1)}°`;
+  if (okT && th > 0) {
+    s += FIG.arc(cx, cy, 70, 0, th, "var(--text-main)");
+    const tl = P(80, -0.12);
+    s += FIG.text(tl[0], tl[1] + 4, `θ = ${FIG.n(thetaDeg, 2)}°`, { anchor: "start", num: true, weight: 600 });
   }
+  // region labels
+  s += FIG.box(x0 + 4, 30, r ? ["1 · upstream", `M₁ = ${FIG.n(r.M1, 3)}`] : ["1 · upstream"], "start");
+  if (r && okB) {
+    // region 2 is a thin sliver between shock and ramp: label it from inside the body with a leader
+    const Ls2 = Math.min((cy - 14) / Math.sin(be), (W - 10 - cx) / Math.cos(be));
+    const pt = P(Math.min(380, 0.85 * Ls2), (th + be) / 2), bx = W - 14, by = H - 34;
+    s += FIG.line(pt[0], pt[1], bx - 70, by - 26, "var(--text-muted)", 1);
+    s += `<circle cx="${pt[0].toFixed(1)}" cy="${pt[1].toFixed(1)}" r="3" fill="var(--text-main)"/>`;
+    s += FIG.box(bx, by, ["2 · behind the shock", `M₂ = ${FIG.n(r.M2, 3)}`, `p₂/p₁ = ${FIG.n(r.p2p1, 3)}`], "end");
+  }
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = s;
 }
 
-/**
- * NEW: Draws the wedge airfoil diagram.
- * All angles in radians for drawing.
- */
+// --- Wedge airfoil: freestream horizontal, wedge pitched nose-up by alpha ---
 function updateWedgeDiagram(g, M1, delta, alpha, lower, upper) {
-    const svg = document.getElementById("wa-diagram");
-    svg.innerHTML = ''; // Clear previous drawing
-    
-    const x0 = 320, y0 = 200; // Center origin
-    const L = 250; // Length of lines
-
-    const deltaRad = deg2rad(delta);
-    const alphaRad = deg2rad(alpha);
-
-    // --- Draw Wedge Body ---
-    // Upper surface of wedge
-    svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(deltaRad)}" y2="${y0 - L * Math.sin(deltaRad)}" stroke="var(--body)" stroke-width="4" />`;
-    // Lower surface of wedge
-    svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(-deltaRad)}" y2="${y0 - L * Math.sin(-deltaRad)}" stroke="var(--body)" stroke-width="4" />`;
-    // 0-degree horizontal (wedge centerline)
-    svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L}" y2="${y0}" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4" />`;
-
-    // --- Draw Freestream M1 ---
-    // This line is at angle alpha relative to the horizontal
-    svg.innerHTML += `<line x1="${x0 - L}" y1="${y0 + L * Math.tan(alphaRad)}" x2="${x0}" y2="${y0}" stroke="var(--text-main)" stroke-width="3" marker-end="url(#arrow)" />`;
-    svg.innerHTML += `<text x="${x0 - L/2}" y="${y0 + L/2 * Math.tan(alphaRad) - 15}" fill="var(--text-main)" font-size="16">M₁</text>`;
-
-    // --- Draw Angle of Attack (α) Arc ---
-    if (alpha !== 0) {
-        svg.innerHTML += `<path d="${arcPath(x0, y0, L/4, 0, alphaRad)}" stroke="var(--text-muted)" stroke-width="2" fill="none" />`;
-        svg.innerHTML += `<text x="${x0 + L/4 + 15}" y="${y0 - L/4 * Math.tan(alphaRad/2) - 10}" fill="var(--text-muted)" font-size="14" text-anchor="start">α=${alpha.toFixed(1)}°</text>`;
-    }
-
-    // --- Draw Lower Wave (Shock) ---
-    if (lower.beta) {
-        const betaLowerRad = deg2rad(lower.beta);
-        // Shock angle is relative to freestream, so we subtract beta from alpha
-        const shockAbsAngle = alphaRad - betaLowerRad;
-        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(shockAbsAngle)}" y2="${y0 - L * Math.sin(shockAbsAngle)}" stroke="var(--danger)" stroke-width="3" />`;
-    }
-
-    // --- Draw Upper Wave (Shock, Expansion, or None) ---
-    if (upper.type === "Shock") {
-        const betaUpperRad = deg2rad(upper.beta);
-        // Shock angle is relative to freestream, so we add beta to alpha
-        const shockAbsAngle = alphaRad + betaUpperRad;
-        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(shockAbsAngle)}" y2="${y0 - L * Math.sin(shockAbsAngle)}" stroke="var(--danger)" stroke-width="3" />`;
-    } else if (upper.type === "Expansion") {
-        const mu1 = Math.asin(1/M1);
-        // First fan line starts at Mach angle relative to freestream
-        const firstFanAngle = alphaRad + mu1;
-        
-        const M2 = upper.M2;
-        const mu2 = M2 === Infinity ? 0 : Math.asin(1/M2);
-        // Last fan line ends at Mach angle relative to final flow direction (which is parallel to upper wedge surface)
-        const flowAngleAfter = deg2rad(delta);
-        const lastFanAngle = flowAngleAfter + mu2;
-
-        const midFanAngle = (firstFanAngle + lastFanAngle) / 2;
-        
-        // Draw 3 lines for the fan
-        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(firstFanAngle)}" y2="${y0 - L * Math.sin(firstFanAngle)}" stroke="var(--exp)" stroke-width="1.5" />`;
-        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(midFanAngle)}" y2="${y0 - L * Math.sin(midFanAngle)}" stroke="var(--exp)" stroke-width="1.5" />`;
-        svg.innerHTML += `<line x1="${x0}" y1="${y0}" x2="${x0 + L * Math.cos(lastFanAngle)}" y2="${y0 - L * Math.sin(lastFanAngle)}" stroke="var(--exp)" stroke-width="1.5" />`;
-    }
-    // If "Aligned", do nothing (M1 line is already parallel to upper surface).
+  const svg = document.getElementById("wa-diagram");
+  if (!svg) return;
+  const id = "wa", W = 640, H = 400, ox = 210, oy = 200, ch = 260;
+  const d = deg2rad(delta), a = deg2rad(alpha), h = Math.tan(d);
+  const toS = (x, y) => [ox + ch * (x * Math.cos(a) + y * Math.sin(a)), oy - ch * (-x * Math.sin(a) + y * Math.cos(a))];
+  const ray = (p, ang, L) => [p[0] + L * Math.cos(ang), p[1] - L * Math.sin(ang)];
+  const LE = toS(0, 0), UT = toS(1, h), LT = toS(1, -h), L = 300;
+  let s = FIG.defs(id);
+  // freestream
+  [60, 130, 270, 340].forEach(y => { s += FIG.line(16, y, 96, y, "var(--text-muted)", 1.5, `marker-end="url(#${id}-m)"`); });
+  s += FIG.text(16, 98, `M₁ = ${FIG.n(M1, 2)}`, { anchor: "start", num: true, fill: "var(--text-muted)" });
+  // waves from the leading edge
+  const fan = (a1, a2) => { let o = ""; for (let k = 0; k < 6; k++) { const t = k / 5, e = ray(LE, a1 + (a2 - a1) * t, L * 0.9); o += FIG.line(LE[0], LE[1], e[0], e[1], "var(--exp)", k === 0 || k === 5 ? 1.6 : 0.9); } return o; };
+  if (lower && isFinite(lower.beta)) { const e = ray(LE, -deg2rad(lower.beta), L); s += FIG.line(LE[0], LE[1], e[0], e[1], "var(--danger)", 2.6); }
+  if (upper && upper.type === "Shock") { const e = ray(LE, deg2rad(upper.beta), L); s += FIG.line(LE[0], LE[1], e[0], e[1], "var(--danger)", 2.6); }
+  else if (upper && upper.type === "Expansion") { s += fan(Math.asin(1 / M1), (d - a) + Math.asin(1 / upper.M2)); }
+  else if (upper) { const e = ray(LE, Math.asin(1 / M1), L); s += FIG.line(LE[0], LE[1], e[0], e[1], "var(--text-muted)", 1.2, 'stroke-dasharray="6 5"'); }
+  // chord line and alpha
+  s += FIG.line(LE[0], LE[1], LE[0] + 130, LE[1], "var(--text-muted)", 1, 'stroke-dasharray="3 4"');
+  s += FIG.line(LE[0], LE[1], (UT[0] + LT[0]) / 2, (UT[1] + LT[1]) / 2, "var(--text-muted)", 0.8, 'stroke-dasharray="2 3"');
+  if (Math.abs(alpha) > 0.3) {
+    const fwd = ray(LE, Math.PI - a, 90), hor = [LE[0] - 90, LE[1]];
+    s += FIG.line(LE[0], LE[1], fwd[0], fwd[1], "var(--accent)", 1, 'stroke-dasharray="3 4"');
+    s += FIG.line(LE[0], LE[1], hor[0], hor[1], "var(--text-muted)", 1, 'stroke-dasharray="3 4"');
+    s += FIG.arc(LE[0], LE[1], 70, Math.PI, Math.PI - a, "var(--accent)");
+    const al = ray(LE, Math.PI - a / 2, 78);
+    s += FIG.text(al[0] - 12, al[1] + (a > 0 ? -12 : 12), `α = ${FIG.n(alpha, 1)}°`, { anchor: "end", fill: "var(--accent)", num: true, size: 12.5, weight: 600 });
+  }
+  // body
+  s += `<polygon points="${[LE, UT, LT].map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}" fill="var(--body)" fill-opacity=".14" stroke="var(--body)" stroke-width="2" stroke-linejoin="round"/>`;
+  // pressure arrows into each face, length proportional to p/p1
+  if (lower && upper && isFinite(lower.p_p1) && isFinite(upper.p_p1)) {
+    const pmax = Math.max(lower.p_p1, upper.p_p1, 1), k = 55 / pmax;
+    const face = (A, B, p, up, label) => {
+      const dx = B[0] - A[0], dy = B[1] - A[1], l = Math.hypot(dx, dy);
+      let n = [dy / l, -dx / l]; if ((up && n[1] > 0) || (!up && n[1] < 0)) n = [-n[0], -n[1]]; // outward, screen coords
+      const len = Math.max(p * k, 14), col = p > 1.0005 ? "var(--danger)" : p < 0.9995 ? "var(--exp)" : "var(--text-muted)", mk = p > 1.0005 ? "c" : p < 0.9995 ? "e" : "m";
+      let o = "";
+      [0.3, 0.55, 0.8].forEach(t => {
+        const b = [A[0] + dx * t, A[1] + dy * t];
+        o += FIG.line(b[0] + n[0] * (len + 3), b[1] + n[1] * (len + 3), b[0] + n[0] * 3, b[1] + n[1] * 3, col, 1.6, `marker-end="url(#${id}-${mk})"`);
+      });
+      const m = [A[0] + dx * 0.55, A[1] + dy * 0.55], dd = len + 34;
+      o += FIG.box(m[0] + n[0] * dd, m[1] + n[1] * dd, label);
+      return o;
+    };
+    s += face(LE, UT, upper.p_p1, true, [`upper · p/p₁ = ${FIG.n(upper.p_p1, 3)}`, `M = ${FIG.n(upper.M2, 3)}`]);
+    s += face(LE, LT, lower.p_p1, false, [`lower · p/p₁ = ${FIG.n(lower.p_p1, 3)}`, `M = ${FIG.n(lower.M2, 3)}`]);
+  }
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = s;
 }
 
 // ========================================================================
@@ -469,16 +549,28 @@ function calculateNormalShock() {
     updateText("ns-T2T1", T2T1);
     updateText("ns-p02p01", p02p01);
     updateText("ns-p02p1", p02p1);
-    updateNormalShockDiagram(M1, M2);
+    updateNormalShockDiagram(M1, { M2, p2p1, rho2rho1, T2T1, p02p01 });
     flashResults("normal-shock");
   } catch (err) {
     warning.textContent = err.message;
     clearResults("ns", resultIDs);
-    updateNormalShockDiagram(NaN, NaN);
+    updateNormalShockDiagram(NaN, null);
   }
 }
 
 // --- 3. Oblique Shock Controller ---
+function previewObliqueDiagram() {
+  const g = getGamma();
+  const M1 = parseFloat(document.getElementById("ob-M1").value);
+  const theta = parseFloat(document.getElementById("ob-theta").value);
+  const betaIn = parseFloat(document.getElementById("ob-beta").value);
+  if (!(M1 > 1) || !(theta >= 0) || isFinite(betaIn)) { updateObliqueDiagram(theta, betaIn, null); return; }
+  const betaRad = ob_beta_from_M1_theta(M1, theta, g);
+  if (isNaN(betaRad)) { updateObliqueDiagram(theta, NaN, null); return; }
+  const r = obliqueShockRatios(M1, betaRad, deg2rad(theta), g);
+  updateObliqueDiagram(theta, rad2deg(betaRad), { M1, M2: r.M2, p2p1: r.p2p1, Mn1: r.Mn1 });
+}
+
 function clearObliqueInputs() {
     const inputs = ["ob-M1", "ob-theta", "ob-beta"];
     inputs.forEach(id => {
@@ -558,7 +650,7 @@ function calculateObliqueShock() {
     updateText("ob-T2T1", T2T1);
     updateText("ob-p02p01", p02p01);
     
-    updateObliqueDiagram(theta, beta);
+    updateObliqueDiagram(theta, beta, { M1, M2, p2p1, Mn1 });
     flashResults("oblique-shock");
 
   } catch (err) {
@@ -567,7 +659,7 @@ function calculateObliqueShock() {
     if (isNaN(M1_in)) updateText("ob-M1", NaN);
     if (isNaN(theta_in)) updateText("ob-theta", NaN);
     if (isNaN(beta_in)) updateText("ob-beta", NaN);
-    updateObliqueDiagram(isNaN(theta) ? theta_in : theta, isNaN(beta) ? beta_in : beta);
+    updateObliqueDiagram(isNaN(theta) ? theta_in : theta, isNaN(beta) ? beta_in : beta, null);
   }
 }
 
@@ -740,7 +832,9 @@ function calculateWedgeAirfoil() {
 function runAllCalculators() {
   calculateIsentropic();
   calculateNormalShock();
-  // Don't run oblique shock on load
+  // Oblique shock is not computed on load (it fills the third input), but its
+  // figure shows the default case so the tab never opens on an empty drawing.
+  previewObliqueDiagram();
   calculatePrandtlMeyer();
   calculateWedgeAirfoil();
 }
