@@ -51,6 +51,8 @@ p{margin:0}
 .site-header h1{font-size:clamp(27px,4vw,38.4px)}
 .site-header .eyebrow{margin:0 0 4px}
 .controls-group{display:flex;align-items:center;gap:16px}
+.lab-link{font-size:14.5px;font-weight:600;color:var(--accent);text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:1px}
+.lab-link:hover{color:var(--ink)}
 .font-size-control{display:flex;border:1px solid var(--line)}
 .font-size-control button{background:transparent;border:0;border-radius:0;color:var(--muted);padding:5px 9px;font:600 15px var(--f-body);cursor:pointer;line-height:1}
 .font-size-control button:first-child{border-right:1px solid var(--line)}
@@ -189,6 +191,7 @@ sub,sup{font-size:.72em;line-height:0}
       <h1>Compressible Aerodynamics Calculator</h1>
     </div>
     <div class="controls-group">
+      <a class="lab-link" href="https://www.kursatkara.com" title="KARA Lab at Oklahoma State University">KARA Lab website</a>
       <div class="font-size-control">
         <button type="button" id="font-decrease" title="Decrease font size" aria-label="Decrease font size">A−</button>
         <button type="button" id="font-increase" title="Increase font size" aria-label="Increase font size">A+</button>

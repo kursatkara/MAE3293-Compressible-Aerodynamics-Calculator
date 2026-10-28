@@ -559,16 +559,17 @@ function calculateNormalShock() {
 }
 
 // --- 3. Oblique Shock Controller ---
-function previewObliqueDiagram() {
-  const g = getGamma();
-  const M1 = parseFloat(document.getElementById("ob-M1").value);
-  const theta = parseFloat(document.getElementById("ob-theta").value);
-  const betaIn = parseFloat(document.getElementById("ob-beta").value);
-  if (!(M1 > 1) || !(theta >= 0) || isFinite(betaIn)) { updateObliqueDiagram(theta, betaIn, null); return; }
-  const betaRad = ob_beta_from_M1_theta(M1, theta, g);
-  if (isNaN(betaRad)) { updateObliqueDiagram(theta, NaN, null); return; }
-  const r = obliqueShockRatios(M1, betaRad, deg2rad(theta), g);
-  updateObliqueDiagram(theta, rad2deg(betaRad), { M1, M2: r.M2, p2p1: r.p2p1, Mn1: r.Mn1 });
+// The oblique-shock tab solves for whichever of M1, theta, beta is left blank and
+// writes it back into that box (highlighted). Before solving again, that
+// computed value is cleared so the student's two inputs drive the solution.
+function clearComputedObliqueField(exceptId) {
+  ["ob-M1", "ob-theta", "ob-beta"].forEach(id => {
+    const el = document.getElementById(id);
+    if (id !== exceptId && el.classList.contains("is-calculated-input")) {
+      el.value = "";
+      el.classList.remove("is-calculated-input");
+    }
+  });
 }
 
 function clearObliqueInputs() {
@@ -832,9 +833,8 @@ function calculateWedgeAirfoil() {
 function runAllCalculators() {
   calculateIsentropic();
   calculateNormalShock();
-  // Oblique shock is not computed on load (it fills the third input), but its
-  // figure shows the default case so the tab never opens on an empty drawing.
-  previewObliqueDiagram();
+  clearComputedObliqueField();
+  calculateObliqueShock();
   calculatePrandtlMeyer();
   calculateWedgeAirfoil();
 }
@@ -918,6 +918,18 @@ document.addEventListener("DOMContentLoaded", () => {
   
   document.getElementById("ob-computeBtn").addEventListener("click", calculateObliqueShock);
   document.getElementById("ob-clearBtn").addEventListener("click", clearObliqueInputs);
+  // Typing in one box releases the previously computed one, so Compute
+  // always sees exactly two inputs.
+  ["ob-M1", "ob-theta", "ob-beta"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => {
+      const el = document.getElementById(id);
+      if (el.classList.contains("is-calculated-input")) {
+        el.classList.remove("is-calculated-input"); // student took this box over
+      } else {
+        clearComputedObliqueField(id);
+      }
+    });
+  });
   
   document.getElementById("pm-computeBtn").addEventListener("click", calculatePrandtlMeyer);
 
