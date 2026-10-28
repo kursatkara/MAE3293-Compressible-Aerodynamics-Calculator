@@ -450,4 +450,6 @@ footer {
   max-width: 760px;
   width: 90%;
 }
+footer p { margin: 0.35rem 0; line-height: 1.5; }
+footer a { color: var(--accent); }
 
