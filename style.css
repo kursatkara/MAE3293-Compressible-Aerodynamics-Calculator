@@ -1,38 +1,52 @@
+/* =====================================================================
+   MAE 3293 Compressible Aerodynamics Calculator
+   Visual language shared with supersonic-airfoils.html:
+   paper background, Source Serif 4 for headings and numbers,
+   Source Sans 3 for text, square corners, sections set off by rules.
+   ===================================================================== */
+
 /* --- Light Mode Variables --- */
 body[data-theme="light"] {
-  --bg: #f4f5f7;
-  --card: #ffffff;
-  --text-main: #121212;
-  --text-muted: #555;
-  --accent: #007bff;
-  --danger: #dc3545;
-  --border: #dee2e6;
-  --input-bg: #f8f9fa;
-  --accent-bg: #e6f2ff;
-  --accent-flash: #007bff;
-  --card-flash: #ffffff;
-  --shadow-color: rgba(0, 0, 0, 0.1);
+  --bg: #fcfcfb;
+  --card: #fcfcfb;
+  --text-main: #152029;
+  --text-muted: #55616e;
+  --accent: #d24a0f;        /* OSU-orange family */
+  --danger: #c0262d;        /* shocks, errors (compression red) */
+  --exp: #1f5fae;           /* expansion fans */
+  --body: #24313d;          /* wedge / body in diagrams */
+  --border: #d3d9e0;
+  --input-bg: #f5f7f9;
+  --accent-bg: #fbe7dd;
+  --accent-flash: #f8d9c8;
+  --card-flash: #fcfcfb;
+  --shadow-color: transparent;
 }
 
 /* --- Dark Mode Variables --- */
 body[data-theme="dark"] {
-  --bg: #121212;
-  --card: #1f1f1f;
-  --text-main: #f2f2f2;
-  --text-muted: #999;
-  --accent: #00aaff;
-  --danger: #ff5050;
-  --border: #2a2a2a;
-  --input-bg: #0e0e0e;
-  --accent-bg: #00aaff1a;
-  --accent-flash: #00aaff;
-  --card-flash: #1f1f1f;
-  --shadow-color: rgba(0, 0, 0, 0.3);
+  --bg: #12171d;
+  --card: #12171d;
+  --text-main: #e4e9ef;
+  --text-muted: #9aa6b3;
+  --accent: #ff7d3b;
+  --danger: #ff6a60;
+  --exp: #6aa9ff;
+  --body: #c9d3dd;
+  --border: #2a3441;
+  --input-bg: #1b232d;
+  --accent-bg: #3a2216;
+  --accent-flash: #4a2a1a;
+  --card-flash: #12171d;
+  --shadow-color: transparent;
+  color-scheme: dark;
 }
 
 :root {
-  /* Default font size */
   font-size: 16px;
+  --f-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-num: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 /* --- Font Size Scaling --- */
@@ -42,50 +56,77 @@ body[data-font-size="md"] { font-size: 16px; }
 body[data-font-size="lg"] { font-size: 18px; }
 body[data-font-size="xl"] { font-size: 20px; }
 
+* { box-sizing: border-box; }
+
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--f-body);
+  line-height: 1.5;
   background-color: var(--bg);
   color: var(--text-main);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
   min-height: 100vh;
   margin: 0;
-  padding: 2rem 0;
-  transition: background-color 0.2s ease, color 0.2s ease, font-size 0.2s ease;
+  padding: 2rem max(16px, env(safe-area-inset-right, 0px)) 2rem max(16px, env(safe-area-inset-left, 0px));
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 main {
-  background: var(--card);
+  background: transparent;
   max-width: 760px;
-  width: 90%;
-  padding: 1.5rem 2rem 2rem 2rem;
-  border-radius: 12px;
-  box-shadow: 0 0 25px var(--shadow-color);
-  transition: background-color 0.2s ease;
+  width: 100%;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
+/* --- Header --- */
 .main-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   margin-bottom: 1.5rem;
   gap: 1rem;
   flex-wrap: wrap;
 }
+.eyebrow {
+  font-family: var(--f-body);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0 0 0.25rem;
+}
+.back-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.back-link:hover { text-decoration: underline; }
 
 h1 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
   text-align: left;
-  color: var(--accent);
+  color: var(--text-main);
   margin: 0;
-  font-size: 1.75rem;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  line-height: 1.15;
 }
 
 h2 {
-  text-align: center;
-  color: var(--accent);
-  margin-top: 0;
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  text-align: left;
+  color: var(--text-main);
+  margin: 0 0 0.6rem;
 }
 
 /* --- Header Controls (Theme + Font) --- */
@@ -98,19 +139,22 @@ h2 {
 .font-size-control {
   display: flex;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 0;
   overflow: hidden;
 }
 .font-size-control button {
   background: transparent;
   border: none;
+  border-radius: 0;
   color: var(--text-muted);
-  padding: 0.25rem 0.5rem;
+  padding: 0.3rem 0.55rem;
   cursor: pointer;
   line-height: 1;
-  font-size: 1rem;
+  font-family: var(--f-body);
+  font-size: 0.95rem;
+  font-weight: 600;
   margin: 0;
-  box-sizing: border-box; /* Ensures padding/border don't change height */
+  width: auto;
 }
 .font-size-control button:hover {
   background: var(--input-bg);
@@ -121,7 +165,6 @@ h2 {
   border-right: 1px solid var(--border);
 }
 
-
 .theme-toggle {
   display: flex;
   align-items: center;
@@ -129,6 +172,7 @@ h2 {
 }
 .theme-toggle svg {
   color: var(--text-muted);
+  margin: 0;
 }
 .toggle-switch {
   position: relative;
@@ -144,13 +188,10 @@ h2 {
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: var(--border);
   transition: .2s;
-  border-radius: 20px;
+  border-radius: 0;
 }
 .slider:before {
   position: absolute;
@@ -159,12 +200,12 @@ h2 {
   width: 14px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--card);
   transition: .2s;
-  border-radius: 50%;
+  border-radius: 0;
 }
 input:checked + .slider {
-  background-color: var(--accent);
+  background-color: var(--text-main);
 }
 input:checked + .slider:before {
   transform: translateX(18px);
@@ -173,54 +214,60 @@ input:checked + .slider:before {
 /* --- Global Gamma --- */
 .global-settings {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: 0.5rem;
-  background-color: var(--input-bg);
-  padding: 0.75rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  gap: 0.75rem;
+  background: transparent;
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  border: 0;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
   margin-bottom: 1.5rem;
 }
 .global-settings label {
   font-weight: 600;
   color: var(--text-muted);
+  margin: 0;
 }
 .global-settings input {
-  font-family: inherit;
+  font-family: var(--f-num);
+  font-variant-numeric: lining-nums tabular-nums;
   font-size: 1rem;
   color: var(--text-main);
-  background-color: var(--bg);
+  background-color: var(--input-bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  width: 70px;
+  border-radius: 0;
+  width: 80px;
   padding: 0.25rem 0.5rem;
   margin: 0;
 }
 
-/* --- Navigation --- */
+/* --- Navigation (underlined tabs, like the airfoil case tabs) --- */
 .calculator-nav {
   display: flex;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.75rem;
   flex-wrap: wrap;
 }
 .nav-btn {
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 0.75rem;
+  margin: 0 0 -1px;
   border: none;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
   background: transparent;
   color: var(--text-muted);
-  font-size: 1rem; /* Scales with body font size */
+  font-family: var(--f-display);
+  font-size: 1.02rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
+  transition: color 0.15s ease;
   flex-basis: 0;
   flex-grow: 1;
+  width: auto;
   text-align: center;
 }
-/* Four tabs on the first row; Wedge and Diamond share the second */
+/* Four tabs on the first row; Wedge and Supersonic Airfoils share the second */
 .nav-btn:nth-child(-n+4) {
   min-width: 25%;
 }
@@ -231,9 +278,9 @@ input:checked + .slider:before {
 }
 a.nav-btn { text-decoration: none; }
 
-
 .nav-btn:hover {
-  color: var(--text-main);
+  color: var(--accent);
+  filter: none;
 }
 .nav-btn.active {
   color: var(--accent);
@@ -242,23 +289,20 @@ a.nav-btn { text-decoration: none; }
 
 /* --- Panels --- */
 .calculator-panel { display: none; }
-.calculator-panel.active { display: block; animation: fadeIn 0.3s ease; }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.calculator-panel.active { display: block; }
 
-/* --- Input Section --- */
+/* --- Input Section: one square ruled panel --- */
 .input-section {
-  background-color: var(--input-bg);
-  padding: 1rem 1.25rem;
-  border-radius: 10px;
+  background: transparent;
+  padding: 1rem 1.25rem 1.1rem;
   border: 1px solid var(--border);
+  border-top: 2px solid var(--text-main);
+  border-radius: 0;
 }
 .input-hint {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--text-muted);
-  text-align: center;
+  text-align: left;
   margin-top: 0;
 }
 .input-row {
@@ -276,19 +320,26 @@ label {
 
 input, select {
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: 0;
   border: 1px solid var(--border);
-  background-color: var(--bg);
+  background-color: var(--input-bg);
   color: var(--text-main);
-  font-family: inherit;
+  font-family: var(--f-body);
   font-size: 1rem;
   transition: border-color 0.2s ease;
-  box-sizing: border-box; /* Ensures padding/border don't change height */
+}
+input[type="number"] {
+  font-family: var(--f-num);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 input:focus, select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-bg);
+}
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* --- Calculated Input Style --- */
@@ -298,57 +349,64 @@ input.is-calculated-input {
   font-weight: 600;
 }
 
-/* --- Buttons --- */
+/* --- Buttons: square --- */
 button {
   margin-top: 1.2rem;
   padding: 0.6rem;
   width: 100%;
-  border: 1px solid transparent; /* Ensures consistent height */
-  background: var(--accent);
-  color: #fff;
-  border-radius: 6px;
+  border: 1px solid var(--text-main);
+  background: var(--text-main);
+  color: var(--card);
+  border-radius: 0;
+  font-family: var(--f-body);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
-  box-sizing: border-box; /* Ensures padding/border don't change height */
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 button:hover {
-  filter: brightness(1.1);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .button-group {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 1.2rem;
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.2rem;
 }
 .button-group .btn-secondary {
-    background: transparent;
-    border-color: var(--text-muted); /* Use border-color instead of border */
-    color: var(--text-muted);
-    flex-grow: 1;
+  margin-top: 0;
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-main);
+  flex-grow: 1;
+}
+.button-group .btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
 }
 .button-group .btn-primary {
-    margin-top: 0;
-    border-color: var(--accent); /* Use border-color */
-    flex-grow: 1;
+  margin-top: 0;
+  flex-grow: 1;
 }
 
 .warning {
   color: var(--danger);
   min-height: 1.2em;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-  text-align: center;
+  font-size: 0.92rem;
+  margin: 0.5rem 0 0;
+  text-align: left;
 }
 
-/* --- Results --- */
+/* --- Results: a heading rule, then ruled rows --- */
 .results {
-  margin-top: 1.5rem;
-  background-color: var(--input-bg);
-  padding: 1rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  margin-top: 2rem;
+  background: transparent;
+  padding: 0.9rem 0 0;
+  border: 0;
+  border-top: 2px solid var(--text-main);
+  border-radius: 0;
 }
 .results-table {
   display: flex;
@@ -357,12 +415,12 @@ button:hover {
 .results-table .row {
   display: flex;
   justify-content: space-between;
-  padding: 0.4rem 0.3rem;
+  align-items: baseline;
+  gap: 1rem;
   border-bottom: 1px solid var(--border);
-  border-radius: 3px;
-  /* Add margin/padding compensation to allow flash to fill row */
-  margin: 0 -0.3rem;
-  padding: 0.4rem 0.6rem;
+  border-radius: 0;
+  margin: 0;
+  padding: 0.45rem 0.25rem;
 }
 .results-table .row:last-child {
   border-bottom: none;
@@ -371,39 +429,25 @@ button:hover {
   color: var(--text-muted);
 }
 .results-table .value {
-  font-family: inherit;
+  font-family: var(--f-num);
   font-variant-numeric: lining-nums tabular-nums;
-  font-weight: 600;
-  color: var(--accent);
+  font-size: 1.08em;
+  font-weight: 500;
+  color: var(--text-main);
+  text-align: right;
 }
 
-/* --- Result Flash Animation --- */
+/* --- Result Flash: a brief tint on the row --- */
 .is-new-result-row {
   animation: flash-row 0.8s ease-out;
 }
 @keyframes flash-row {
-  0% { 
-    background-color: var(--accent-flash);
-  }
-  30% { 
-    background-color: var(--accent-flash);
-  }
-  100% { 
-    background-color: transparent;
-  }
-  /* Ensure text color is readable during flash */
-  0% .label, 30% .label {
-    color: var(--card-flash);
-  }
-  0% .value, 30% .value {
-    color: var(--card-flash);
-  }
-  100% .label {
-    color: var(--text-muted);
-  }
-  100% .value {
-    color: var(--accent);
-  }
+  0%   { background-color: var(--accent-flash); }
+  30%  { background-color: var(--accent-flash); }
+  100% { background-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-new-result-row { animation: none; }
 }
 
 /* --- Wedge Airfoil Specific --- */
@@ -416,7 +460,9 @@ button:hover {
 /* --- Diagrams --- */
 .diagram-section {
   margin-top: 2rem;
-  text-align: center;
+  padding-top: 0.9rem;
+  border-top: 2px solid var(--text-main);
+  text-align: left;
 }
 svg {
   max-width: 100%;
@@ -424,32 +470,34 @@ svg {
   margin-top: 1rem;
 }
 #ob-shockDiagram, #wa-diagram {
-  margin-top: 0; /* Position diagram just under title */
+  margin-top: 0;
 }
 svg text {
-  font-family: system-ui, sans-serif;
+  font-family: var(--f-body);
+  font-variant-numeric: lining-nums tabular-nums;
   dominant-baseline: middle;
   text-anchor: middle;
   user-select: none;
 }
 #ob-thetaLabel, #ob-betaLabel {
-    text-anchor: start;
+  text-anchor: start;
 }
 .diagram-caption {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--text-muted);
   margin-top: 0.5rem;
 }
 
 /* --- Footer --- */
 footer {
-  text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.8rem;
+  text-align: left;
+  margin-top: 2.5rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
   color: var(--text-muted);
   max-width: 760px;
-  width: 90%;
+  width: 100%;
 }
-footer p { margin: 0.35rem 0; line-height: 1.5; }
+footer p { margin: 0.25rem 0; line-height: 1.5; }
 footer a { color: var(--accent); }
-
