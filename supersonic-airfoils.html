@@ -156,7 +156,8 @@ tr.pick:hover td{background:var(--soft)}
 .tick{fill:var(--muted);font:12.5px var(--f-num)}
 svg text{font-variant-numeric:lining-nums tabular-nums}
 .axlab{fill:var(--muted);font:13px var(--f-body)}
-footer{font-size:13px;color:var(--muted)}
+footer.site{border-top:1px solid var(--line);padding-top:14px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+footer.site a{color:var(--accent)}
 sub,sup{font-size:.72em;line-height:0}
 </style>
 </head>
@@ -386,9 +387,14 @@ sub,sup{font-size:.72em;line-height:0}
           </div>
         </div>
       </section>
-      <footer>MAE 3293, Oklahoma State University. Companion to the course compressible aerodynamics calculator. Face numbers: flat plate and wedge 1 = upper, 2 = lower, b = base; diamond 1 = upper front, 2 = upper rear, 3 = lower front, 4 = lower rear; ∞ = freestream.</footer>
+      <p class="note">Face numbers: flat plate and wedge 1 = upper, 2 = lower, b = base; diamond 1 = upper front, 2 = upper rear, 3 = lower front, 4 = lower rear; ∞ = freestream.</p>
     </main>
   </div>
+  <footer class="site">
+<p>© 2025–2026 Kursat Kara, Oklahoma State University.<br>
+Code released under the <a href="https://github.com/kursatkara/MAE3293-Compressible-Aerodynamics-Calculator/blob/main/LICENSE" target="_blank" rel="noopener license">MIT License</a>. Text, worked solutions and figures licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">CC BY 4.0</a>: you may share and adapt them with attribution.</p>
+<p>Developed with assistance from ChatGPT, Gemini, and Claude.</p>
+  </footer>
 </div>
 
 <script>
