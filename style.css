@@ -220,11 +220,16 @@ input:checked + .slider:before {
   flex-grow: 1;
   text-align: center;
 }
-/* Make 5th button wrap nicely */
-.nav-btn:nth-child(5) {
-  flex-grow: 0;
-  min-width: 100%;
+/* Four tabs on the first row; Wedge and Diamond share the second */
+.nav-btn:nth-child(-n+4) {
+  min-width: 25%;
 }
+.nav-btn:nth-child(5),
+.nav-btn:nth-child(6) {
+  flex-grow: 1;
+  min-width: 50%;
+}
+a.nav-btn { text-decoration: none; }
 
 
 .nav-btn:hover {
