@@ -36,7 +36,7 @@ try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.docu
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 48px}
 [hidden]{display:none!important}
 .wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
@@ -46,9 +46,29 @@ h3{font-size:17px;font-weight:600}
 p{margin:0}
 .eyebrow{font-family:var(--f-body);text-transform:uppercase;letter-spacing:.1em;font-size:12.5px;color:var(--accent);font-weight:600}
 .lede{color:var(--muted);max-width:72ch}
-header{display:flex;flex-direction:column;gap:6px}
-.back{font-size:14px;color:var(--accent);text-decoration:none;font-weight:600}
-.back:hover{text-decoration:underline}
+/* site header + calculator tabs: identical to index.html */
+.site-header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.site-header h1{font-size:clamp(27px,4vw,38.4px)}
+.site-header .eyebrow{margin:0 0 4px}
+.controls-group{display:flex;align-items:center;gap:16px}
+.font-size-control{display:flex;border:1px solid var(--line)}
+.font-size-control button{background:transparent;border:0;border-radius:0;color:var(--muted);padding:5px 9px;font:600 15px var(--f-body);cursor:pointer;line-height:1}
+.font-size-control button:first-child{border-right:1px solid var(--line)}
+.font-size-control button:hover{background:var(--soft);color:var(--ink)}
+.theme-toggle{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.toggle-switch{position:relative;display:inline-block;width:38px;height:20px}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--line);transition:background .2s}
+.slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:var(--panel);transition:transform .2s}
+.toggle-switch input:checked+.slider{background:var(--ink)}
+.toggle-switch input:checked+.slider:before{transform:translateX(18px)}
+.toggle-switch input:focus-visible+.slider{outline:2px solid var(--accent);outline-offset:2px}
+.calculator-nav{display:flex;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin}
+.nav-btn{flex:1 0 auto;white-space:nowrap;text-align:center;padding:11px 12px;margin-bottom:-1px;border-bottom:3px solid transparent;color:var(--muted);font:600 16.3px var(--f-display);text-decoration:none;transition:color .15s}
+.nav-btn:hover{color:var(--accent)}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.pagehead{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.pagetitle{font-size:28px}
 
 /* case tabs */
 .cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 24px}
@@ -163,12 +183,37 @@ sub,sup{font-size:.72em;line-height:0}
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <a class="back" href="index.html">← Back to the Compressible Aerodynamics Calculator</a>
-    <div class="eyebrow">MAE 3293 · Fundamentals of Aerodynamics · High-speed flow</div>
-    <h1>Supersonic Airfoil Calculator</h1>
-    <p class="lede">Shock-expansion theory for three airfoils of increasing complexity. Pick a case, then change the freestream Mach number, the angle of attack, or the geometry. Every step below updates: the wave on each surface, the surface pressures, the force on each face, and finally <i>c<sub>l</sub></i>, <i>c<sub>d</sub></i> and <i>c<sub>m</sub></i>.</p>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">MAE 3293 · Fundamentals of Aerodynamics · High-speed flow</p>
+      <h1>Compressible Aerodynamics Calculator</h1>
+    </div>
+    <div class="controls-group">
+      <div class="font-size-control">
+        <button type="button" id="font-decrease" title="Decrease font size" aria-label="Decrease font size">A−</button>
+        <button type="button" id="font-increase" title="Increase font size" aria-label="Increase font size">A+</button>
+      </div>
+      <div class="theme-toggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <label class="toggle-switch"><input type="checkbox" id="theme-toggle-checkbox" aria-label="Light theme"><span class="slider"></span></label>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </div>
+    </div>
   </header>
+
+  <nav class="calculator-nav" aria-label="Calculators">
+    <a class="nav-btn" href="index.html#isentropic">Isentropic Flow</a>
+    <a class="nav-btn" href="index.html#normal-shock">Normal Shock</a>
+    <a class="nav-btn" href="index.html#oblique-shock">Oblique Shock</a>
+    <a class="nav-btn" href="index.html#prandtl-meyer">Prandtl-Meyer</a>
+    <a class="nav-btn" href="index.html#wedge-airfoil">Wedge Airfoil</a>
+    <a class="nav-btn active" href="supersonic-airfoils.html" aria-current="page">Supersonic Airfoils</a>
+  </nav>
+
+  <div class="pagehead">
+    <h2 class="pagetitle">Supersonic Airfoils</h2>
+    <p class="lede">Shock-expansion theory for three airfoils of increasing complexity. Pick a case, then change the freestream Mach number, the angle of attack, or the geometry. Every step below updates: the wave on each surface, the surface pressures, the force on each face, and finally <i>c<sub>l</sub></i>, <i>c<sub>d</sub></i> and <i>c<sub>m</sub></i>.</p>
+  </div>
 
   <div class="cases" role="tablist" aria-label="Airfoil case">
     <button class="case" role="tab" id="tab-flat" data-case="flat" aria-selected="true">
@@ -842,6 +887,21 @@ function renderChart(){
   $('chart').innerHTML=s;
 }
 function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x)));const n=x/p;return (n<1.5?1:n<3?2:n<7?5:10)*p;}
+
+/* ---------------- theme + font size (shared with index.html) ---------------- */
+(function(){
+  const tg=$('theme-toggle-checkbox'), root=document.documentElement;
+  const sysLight=()=>window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches;
+  const cur=()=>root.getAttribute('data-theme')||(sysLight()?'light':'dark');
+  tg.checked=cur()==='light';
+  tg.addEventListener('change',()=>{const t=tg.checked?'light':'dark';root.setAttribute('data-theme',t);try{localStorage.setItem('theme',t);}catch(e){}});
+  const sizes=['xs','sm','md','lg','xl'], scale={xs:0.875,sm:0.9375,md:1,lg:1.125,xl:1.25};
+  let i=2;try{const v=sizes.indexOf(localStorage.getItem('font-size'));if(v>=0)i=v;}catch(e){}
+  const wrap=document.querySelector('.wrap');
+  const apply=k=>{i=Math.max(0,Math.min(sizes.length-1,k));wrap.style.zoom=scale[sizes[i]];try{localStorage.setItem('font-size',sizes[i]);}catch(e){}};
+  $('font-increase').onclick=()=>apply(i+1); $('font-decrease').onclick=()=>apply(i-1);
+  apply(i);
+})();
 
 const initial=caseOfHash[location.hash.slice(1)]||'flat';
 S.cs=initial; syncInputs(); render();

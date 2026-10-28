@@ -749,15 +749,29 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Main Tab Navigation ---
   const navButtons = document.querySelectorAll(".nav-btn");
   const panels = document.querySelectorAll(".calculator-panel");
-  navButtons.forEach(btn => {
-    if (!btn.dataset.calculator) return; // plain links (e.g. Diamond Airfoil page)
-    btn.addEventListener("click", () => {
-      navButtons.forEach(b => b.classList.remove("active"));
-      panels.forEach(p => p.classList.remove("active"));
-      btn.classList.add("active");
-      document.getElementById(`${btn.dataset.calculator}-calculator`).classList.add("active");
+  // Each tab has its own address (index.html#oblique-shock, ...), so the
+  // Supersonic Airfoils page can link straight to any calculator here.
+  const showCalculator = (name, updateHash) => {
+    const panel = document.getElementById(`${name}-calculator`);
+    if (!panel) return false;
+    navButtons.forEach(b => {
+      const on = b.dataset.calculator === name;
+      b.classList.toggle("active", on);
+      if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
+    panels.forEach(p => p.classList.remove("active"));
+    panel.classList.add("active");
+    if (updateHash) {
+      try { history.replaceState(null, "", "#" + name); } catch (e) { location.hash = name; }
+    }
+    return true;
+  };
+  navButtons.forEach(btn => {
+    if (!btn.dataset.calculator) return; // links to other pages (Supersonic Airfoils)
+    btn.addEventListener("click", () => showCalculator(btn.dataset.calculator, true));
   });
+  showCalculator(location.hash.slice(1), false) || showCalculator("isentropic", false);
+  window.addEventListener("hashchange", () => showCalculator(location.hash.slice(1), false));
 
   // --- Theme Toggle ---
   const themeToggle = document.getElementById("theme-toggle-checkbox");
