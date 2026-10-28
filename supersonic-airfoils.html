@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script>
+/* Follow the theme chosen on the main calculator page (same localStorage key). */
+try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}
+</script>
+<title>Supersonic Airfoil Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: case tabs across the top, then control rail (left, sticky on desktop) + worked-solution column (right); stacks on phones. */
+:root{
+  --bg:#eef0f2; --panel:#ffffff; --ink:#152029; --muted:#55616e; --line:#d3d9e0; --soft:#f5f7f9;
+  --accent:#d24a0f;          /* OSU-orange family, brand/highlights */
+  --comp:#c0262d;            /* compression (shock), p > p_inf */
+  --exp:#1f5fae;             /* expansion (Prandtl-Meyer), p < p_inf */
+  --mach:#7d8894;            /* Mach waves, guides, p = p_inf */
+  --body:#24313d;            /* airfoil */
+  --ok:#2f7d4f; --warn:#a15c00; --bad:#b3261e;
+  --f-display:"Saira Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1318; --panel:#151c24; --ink:#e4e9ef; --muted:#9aa6b3; --line:#2a3441; --soft:#1b232d;
+  --accent:#ff7d3b; --comp:#ff6a60; --exp:#6aa9ff; --mach:#7f8b98; --body:#c9d3dd;
+  --ok:#5cc28a; --warn:#e5a54a; --bad:#ff7b72; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1318; --panel:#151c24; --ink:#e4e9ef; --muted:#9aa6b3; --line:#2a3441; --soft:#1b232d;
+  --accent:#ff7d3b; --comp:#ff6a60; --exp:#6aa9ff; --mach:#7f8b98; --body:#c9d3dd;
+  --ok:#5cc28a; --warn:#e5a54a; --bad:#ff7b72; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+[hidden]{display:none!important}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:.01em}
+h2{font-size:22px;font-weight:600}
+h3{font-size:17px;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--accent);font-weight:600}
+.lede{color:var(--muted);max-width:72ch}
+header{display:flex;flex-direction:column;gap:6px}
+.back{font-size:14px;color:var(--accent);text-decoration:none;font-weight:600}
+.back:hover{text-decoration:underline}
+
+/* case tabs */
+.cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.case{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer;text-align:left;font:inherit}
+.case svg{flex:none;width:74px;height:30px}
+.case .t{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.case .t b{font-family:var(--f-display);font-size:18px;font-weight:600}
+.case .t small{color:var(--muted);font-size:13px}
+.case[aria-selected=true]{border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.case[aria-selected=true] .t b{color:var(--accent)}
+.case:hover{border-color:var(--accent)}
+@media (max-width:640px){.cases{grid-template-columns:minmax(0,1fr)}.case svg{width:60px}}
+
+.grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:920px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.rail{position:sticky;top:max(12px,env(safe-area-inset-top,0px))}
+@media (max-width:920px){.rail{position:static}}
+.main{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+/* controls */
+.ctl{display:flex;flex-direction:column;gap:4px}
+.lbl{font-size:14px;font-weight:600}
+.ctl label{font-size:14px;font-weight:600;display:block}
+.ctl label small{float:right;margin-left:8px;font-weight:400;color:var(--muted);font-size:12.5px}
+.row{display:flex;gap:10px;align-items:center}
+.row input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.row input[type=number]{width:86px;font-family:var(--f-mono);font-size:14px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft);color:var(--ink)}
+input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink);font:600 13px var(--f-body);padding:7px 8px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--panel)}
+.derived{font-size:13px;color:var(--muted);background:var(--soft);border-radius:6px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
+.derived b{font-weight:600;color:var(--ink);font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.note{font-size:13.5px;color:var(--muted)}
+.sep{height:1px;background:var(--line)}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button,.mini{border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:5px 11px;font:13px var(--f-body);cursor:pointer}
+.presets button:hover,.mini:hover{border-color:var(--accent)}
+details.more{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+details.more summary{cursor:pointer;font-weight:600;font-size:14px}
+details.more[open] summary{margin-bottom:10px}
+details.more .inner{display:flex;flex-direction:column;gap:12px}
+
+/* banner */
+.banner{border-radius:8px;padding:10px 14px;font-size:14.5px;border:1px solid;display:flex;flex-direction:column;gap:4px}
+.banner.bad{border-color:var(--bad);color:var(--bad);background:color-mix(in srgb,var(--bad) 8%,transparent)}
+.banner.warn{border-color:var(--warn);color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,transparent)}
+.banner b{font-weight:700}
+
+/* figure */
+.fig{width:100%;overflow-x:auto}
+.fig svg{display:block;width:100%;min-width:560px;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.sw{width:22px;height:0;border-top:3px solid}
+.headrow{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--soft);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile .k{font-size:13px;color:var(--muted);font-weight:600}
+.tile .v{font-family:var(--f-mono);font-size:26px;font-weight:500;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12.5px;color:var(--muted);font-family:var(--f-mono)}
+
+/* tables */
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:12.5px}
+td{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td:first-child,th:first-child,td.l,th.l{text-align:left;font-family:var(--f-body)}
+tfoot td{font-weight:600;border-top:2px solid var(--ink);border-bottom:0}
+tr.cur td{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+tr.pick{cursor:pointer}
+tr.pick:hover td{background:var(--soft)}
+.chip{display:inline-block;font:600 12px var(--f-body);padding:1px 8px;border-radius:999px;border:1px solid}
+.chip.shock{color:var(--comp);border-color:var(--comp)}
+.chip.exp{color:var(--exp);border-color:var(--exp)}
+.chip.none,.chip.base{color:var(--mach);border-color:var(--mach)}
+
+/* worked steps */
+.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step{border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.step .hd{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.step .why{font-size:14px;color:var(--muted)}
+.calc{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:14px;align-items:baseline}
+.calc .q{color:var(--muted)}
+.calc .a{font-family:var(--f-mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.calc .a em{font-family:var(--f-body);font-style:normal;color:var(--muted);font-size:13px}
+.calc .hl{color:var(--accent);font-weight:500}
+.prose{max-width:72ch;display:flex;flex-direction:column;gap:10px;min-width:0}
+.prose p,.prose li{font-size:15.5px}
+.prose ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.eq{overflow-x:auto;padding:4px 0}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:760px){.cols2{grid-template-columns:minmax(0,1fr)}}
+
+/* chart */
+.axis{stroke:var(--muted);stroke-width:1}
+.gridl{stroke:var(--line);stroke-width:1}
+.tick{fill:var(--muted);font:12px var(--f-mono)}
+.axlab{fill:var(--muted);font:13px var(--f-body)}
+footer{font-size:13px;color:var(--muted)}
+sub,sup{font-size:.72em;line-height:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="index.html">← Back to the Compressible Aerodynamics Calculator</a>
+    <div class="eyebrow">MAE 3293 · Fundamentals of Aerodynamics · High-speed flow</div>
+    <h1>Supersonic Airfoil Calculator</h1>
+    <p class="lede">Shock-expansion theory for three airfoils of increasing complexity. Pick a case, then change the freestream Mach number, the angle of attack, or the geometry. Every step below updates: the wave on each surface, the surface pressures, the force on each face, and finally <i>c<sub>l</sub></i>, <i>c<sub>d</sub></i> and <i>c<sub>m</sub></i>.</p>
+  </header>
+
+  <div class="cases" role="tablist" aria-label="Airfoil case">
+    <button class="case" role="tab" id="tab-flat" data-case="flat" aria-selected="true">
+      <svg viewBox="0 0 74 30" aria-hidden="true"><line x1="6" y1="15" x2="68" y2="15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      <span class="t"><b>1 · Flat plate</b><small>Lift and drag due to lift</small></span>
+    </button>
+    <button class="case" role="tab" id="tab-wedge" data-case="wedge" aria-selected="false">
+      <svg viewBox="0 0 74 30" aria-hidden="true"><polygon points="6,15 68,5 68,25" fill="currentColor" fill-opacity=".15" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      <span class="t"><b>2 · Wedge</b><small>Adds thickness drag and a base</small></span>
+    </button>
+    <button class="case" role="tab" id="tab-diamond" data-case="diamond" aria-selected="false">
+      <svg viewBox="0 0 74 30" aria-hidden="true"><polygon points="6,15 37,5 68,15 37,25" fill="currentColor" fill-opacity=".15" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      <span class="t"><b>3 · Diamond</b><small>Closed body, shoulder expansions</small></span>
+    </button>
+  </div>
+
+  <div class="grid">
+    <!-- ============ CONTROL RAIL ============ -->
+    <aside class="card rail" aria-label="Inputs">
+      <h2>Inputs</h2>
+      <div class="ctl">
+        <label for="M">Freestream Mach, M<sub>∞</sub></label>
+        <div class="row"><input type="range" id="M_r" min="1.05" max="6" step="0.01" aria-label="Mach slider"><input type="number" id="M" min="1.01" max="20" step="0.01"></div>
+      </div>
+      <div class="ctl">
+        <label for="alpha">Angle of attack, α <small>deg</small></label>
+        <div class="row"><input type="range" id="alpha_r" min="-20" max="25" step="0.1" aria-label="Angle of attack slider"><input type="number" id="alpha" min="-45" max="45" step="0.1"></div>
+      </div>
+      <div class="sep"></div>
+
+      <p class="note" id="flatNote">A flat plate has zero thickness, so α is the only geometric input. Both surfaces have length c.</p>
+
+      <div id="geomBox" style="display:flex;flex-direction:column;gap:14px">
+        <div class="ctl">
+          <span class="lbl">Specify thickness by</span>
+          <div class="seg" role="group" aria-label="Geometry input mode">
+            <button id="mode_ang" aria-pressed="true">Half-angle</button>
+            <button id="mode_tc" aria-pressed="false">Thickness t/c</button>
+          </div>
+        </div>
+        <div class="ctl" id="box_ang">
+          <label for="ang" id="angLabel">Half-angle <small>deg</small></label>
+          <div class="row"><input type="range" id="ang_r" min="0.5" max="25" step="0.1" aria-label="Half-angle slider"><input type="number" id="ang" min="0.1" max="40" step="0.1"></div>
+        </div>
+        <div class="ctl" id="box_tc" hidden>
+          <label for="tc">Thickness ratio, t/c</label>
+          <div class="row"><input type="range" id="tc_r" min="0.01" max="0.4" step="0.001" aria-label="Thickness slider"><input type="number" id="tc" min="0.001" max="0.8" step="0.001"></div>
+        </div>
+        <div class="ctl" id="box_xm">
+          <label for="xm">Max-thickness location, x<sub>m</sub>/c <small>0.5 = symmetric</small></label>
+          <div class="row"><input type="range" id="xm_r" min="0.15" max="0.85" step="0.01" aria-label="Max thickness location slider"><input type="number" id="xm" min="0.05" max="0.95" step="0.01"></div>
+        </div>
+        <div class="derived" id="geomDerived"></div>
+        <details class="more" id="baseBox">
+          <summary>Advanced: base pressure</summary>
+          <div class="inner">
+            <div class="ctl">
+              <label for="pb">Base pressure, p<sub>b</sub>/p<sub>∞</sub> <small>default 1</small></label>
+              <div class="row"><input type="range" id="pb_r" min="0" max="1.5" step="0.01" aria-label="Base pressure slider"><input type="number" id="pb" min="0" max="5" step="0.01"></div>
+            </div>
+            <p class="note">The blunt base sits in separated flow, so shock-expansion theory cannot predict its pressure. The default p<sub>b</sub> = p<sub>∞</sub> means the base adds no force. In a real flow p<sub>b</sub> &lt; p<sub>∞</sub>, which adds base drag; p<sub>b</sub> = 0 is the vacuum limit.</p>
+            <button class="mini" id="pbReset" type="button">Reset to p<sub>b</sub> = p<sub>∞</sub></button>
+          </div>
+        </details>
+      </div>
+
+      <details class="more">
+        <summary>Gas and dimensional inputs</summary>
+        <div class="inner">
+          <div class="ctl">
+            <label for="gamma">Ratio of specific heats, γ</label>
+            <div class="row"><input type="range" id="gamma_r" min="1.1" max="1.67" step="0.01" aria-label="Gamma slider"><input type="number" id="gamma" min="1.01" max="1.8" step="0.01"></div>
+          </div>
+          <div class="ctl">
+            <label for="pinf">Freestream pressure, p<sub>∞</sub> <small>Pa</small></label>
+            <div class="row"><input type="number" id="pinf" min="1" step="100" style="width:100%"></div>
+          </div>
+          <div class="ctl">
+            <label for="chord">Chord, c <small>m</small></label>
+            <div class="row"><input type="number" id="chord" min="0.001" step="0.1" style="width:100%"></div>
+          </div>
+        </div>
+      </details>
+      <div class="sep"></div>
+      <div class="ctl">
+        <span class="lbl">Examples</span>
+        <div class="presets" id="presets"></div>
+      </div>
+    </aside>
+
+    <!-- ============ MAIN COLUMN ============ -->
+    <main class="main">
+      <div id="banners" style="display:flex;flex-direction:column;gap:8px"></div>
+
+      <section class="card" aria-labelledby="h-fig">
+        <div class="headrow"><h2 id="h-fig">Wave pattern and surface pressures</h2><span class="legend">Drawn to scale, freestream horizontal</span></div>
+        <div class="fig"><svg id="fig" viewBox="0 0 820 430" role="img" aria-label="Airfoil with shocks, expansion fans and pressure arrows"></svg></div>
+        <div class="legend">
+          <span><i class="sw" style="border-color:var(--comp)"></i>Oblique shock</span>
+          <span><i class="sw" style="border-color:var(--exp)"></i>Prandtl–Meyer fan</span>
+          <span><i class="sw" style="border-color:var(--mach);border-top-style:dashed"></i>Mach wave (no turning)</span>
+          <span><i style="font-style:normal">Arrows: pressure pushing on each face, length ∝ p/p<sub>∞</sub>; red p &gt; p<sub>∞</sub>, blue p &lt; p<sub>∞</sub></i></span>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-res">
+        <h2 id="h-res">Result</h2>
+        <div class="tiles" id="tiles"></div>
+        <p class="note">Second line in each tile: linear (Ackeret) theory for the same case and its difference from shock-expansion theory.</p>
+      </section>
+
+      <section class="card" aria-labelledby="h-cmp">
+        <div class="headrow"><h2 id="h-cmp">The three cases side by side</h2><span class="legend">Same M<sub>∞</sub>, α and γ; each case keeps its own geometry. Click a row to switch.</span></div>
+        <div class="tblwrap"><table id="cmpTable"></table></div>
+      </section>
+
+      <section class="card" aria-labelledby="h-tab">
+        <h2 id="h-tab">Surface-by-surface summary</h2>
+        <div class="tblwrap"><table id="surfTable"></table></div>
+        <p class="note">F<sub>i</sub> = p<sub>i</sub> ℓ<sub>i</sub> is the absolute-pressure force per unit span on face <i>i</i>, acting normal to the face and into the body. ΔL′ and ΔD′ are its components perpendicular and parallel to the freestream. The p<sub>∞</sub> parts cancel around the closed contour, so summing absolute forces and summing gauge forces give the same L′ and D′.</p>
+      </section>
+
+      <section class="card" aria-labelledby="h-steps">
+        <div><div class="eyebrow">Worked solution</div><h2 id="h-steps">March the flow over each face</h2></div>
+        <p class="lede" style="font-size:15px" id="stepsIntro"></p>
+        <div class="steps" id="steps"></div>
+      </section>
+
+      <section class="card" aria-labelledby="h-forces">
+        <div><div class="eyebrow">Worked solution</div><h2 id="h-forces">Pressures → forces → coefficients</h2></div>
+        <div class="cols2">
+          <div class="prose">
+            <p>Resolve the pressure forces in body axes first: N′ normal to the chord, A′ along it.</p>
+            <div data-case="flat">
+              <p>Both surfaces have length c and are parallel to the chord, so the plate carries no axial force:</p>
+              <div class="eq">\[ N' = (p_2-p_1)\,c,\qquad A' = 0 \]</div>
+            </div>
+            <div data-case="wedge">
+              <p>Each face has length ℓ = c/cos δ, with ℓ cos δ = c and ℓ sin δ = t/2. The base of height t carries p<sub>b</sub>:</p>
+              <div class="eq">\[ N' = (p_2-p_1)\,c,\qquad A' = (p_1+p_2)\,\frac{t}{2} - p_b\,t \]</div>
+            </div>
+            <div data-case="diamond">
+              <p>With face lengths ℓ<sub>f</sub> (front) and ℓ<sub>r</sub> (rear), ℓ<sub>f</sub>cos ε<sub>1</sub> = x<sub>m</sub> and ℓ<sub>f</sub>sin ε<sub>1</sub> = ℓ<sub>r</sub>sin ε<sub>2</sub> = t/2:</p>
+              <div class="eq">\[ N' = (p_3-p_1)\,x_m + (p_4-p_2)\,(c-x_m) \]</div>
+              <div class="eq">\[ A' = (p_1+p_3-p_2-p_4)\,\frac{t}{2} \]</div>
+            </div>
+            <p>Then rotate by α into the wind axes and divide by \(q_\infty c\), with \(q_\infty=\tfrac12\rho_\infty V_\infty^2=\tfrac{\gamma}{2}p_\infty M_\infty^2\):</p>
+            <div class="eq">\[ L' = N'\cos\alpha - A'\sin\alpha,\qquad D' = N'\sin\alpha + A'\cos\alpha \]</div>
+            <div class="eq">\[ c_l=\frac{L'}{q_\infty c},\qquad c_d=\frac{D'}{q_\infty c},\qquad c_{m,\mathrm{LE}}=\frac{M'_{\mathrm{LE}}}{q_\infty c^2} \]</div>
+          </div>
+          <div class="calc" id="forceCalc"></div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-chart">
+        <div class="headrow">
+          <h2 id="h-chart">Sweep in angle of attack</h2>
+          <div class="seg" role="group" aria-label="Chart quantity">
+            <button data-c="cl" aria-pressed="true">c<sub>l</sub></button>
+            <button data-c="cd" aria-pressed="false">c<sub>d</sub></button>
+            <button data-c="ld" aria-pressed="false">L/D</button>
+            <button data-c="cm" aria-pressed="false">c<sub>m,c/4</sub></button>
+          </div>
+        </div>
+        <div class="fig"><svg id="chart" viewBox="0 0 820 340" role="img" aria-label="Coefficient versus angle of attack"></svg></div>
+        <div class="legend">
+          <span><i class="sw" style="border-color:var(--accent)"></i>Shock-expansion theory</span>
+          <span><i class="sw" style="border-color:var(--muted);border-top-style:dashed"></i>Linear (Ackeret) theory</span>
+          <span>Shaded: no valid shock-expansion solution (shock detached or flow behind a front shock subsonic)</span>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-th">
+        <div><div class="eyebrow">Reference</div><h2 id="h-th">Relations used</h2></div>
+        <div class="cols2">
+          <div class="prose">
+            <h3>Turning toward the flow: oblique shock</h3>
+            <p>For a compression of θ, find the weak-shock angle β from the θ–β–M relation, then use normal-shock relations on the normal component.</p>
+            <div class="eq">\[ \tan\theta = 2\cot\beta\,\frac{M_1^2\sin^2\beta-1}{M_1^2(\gamma+\cos2\beta)+2} \]</div>
+            <div class="eq">\[ M_{n,1}=M_1\sin\beta,\qquad \frac{p_2}{p_1}=1+\frac{2\gamma}{\gamma+1}\left(M_{n,1}^2-1\right) \]</div>
+            <div class="eq">\[ M_{n,2}^2=\frac{1+\frac{\gamma-1}{2}M_{n,1}^2}{\gamma M_{n,1}^2-\frac{\gamma-1}{2}},\qquad M_2=\frac{M_{n,2}}{\sin(\beta-\theta)} \]</div>
+            <p>If θ exceeds θ<sub>max</sub>(M<sub>1</sub>, γ), no attached solution exists. The shock stands off the nose and this method no longer applies.</p>
+          </div>
+          <div class="prose">
+            <h3>Turning away from the flow: Prandtl–Meyer expansion</h3>
+            <p>An expansion is isentropic. Add the turning angle to the Prandtl–Meyer function and invert for M<sub>2</sub>.</p>
+            <div class="eq">\[ \nu(M)=\sqrt{\tfrac{\gamma+1}{\gamma-1}}\tan^{-1}\!\sqrt{\tfrac{\gamma-1}{\gamma+1}(M^2-1)}-\tan^{-1}\!\sqrt{M^2-1} \]</div>
+            <div class="eq">\[ \nu(M_2)=\nu(M_1)+\theta,\qquad \frac{p_2}{p_1}=\left(\frac{1+\frac{\gamma-1}{2}M_1^2}{1+\frac{\gamma-1}{2}M_2^2}\right)^{\frac{\gamma}{\gamma-1}} \]</div>
+            <p>Fan edges sit at the local Mach angle, μ = sin<sup>−1</sup>(1/M), measured from the local flow direction.</p>
+            <h3>Pressure coefficient</h3>
+            <div class="eq">\[ C_p=\frac{p-p_\infty}{q_\infty}=\frac{2}{\gamma M_\infty^2}\left(\frac{p}{p_\infty}-1\right) \]</div>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div class="cols2">
+          <div class="prose">
+            <h3>Linear (Ackeret) theory check</h3>
+            <p>For small angles every surface obeys \(C_p = 2\theta/\sqrt{M_\infty^2-1}\), with θ positive for compression. Integrating over the surfaces gives</p>
+            <div data-case="flat"><div class="eq">\[ c_l=\frac{4\alpha}{\sqrt{M_\infty^2-1}},\qquad c_d=\frac{4\alpha^2}{\sqrt{M_\infty^2-1}} \]</div></div>
+            <div data-case="wedge"><div class="eq">\[ c_l=\frac{4\alpha}{\sqrt{M_\infty^2-1}},\qquad c_d=\frac{4}{\sqrt{M_\infty^2-1}}\left[\alpha^2+\left(\frac{t}{2c}\right)^2\right] - C_{p,b}\,\frac{t}{c} \]</div>
+              <p>The base term uses the same prescribed base pressure as shock-expansion theory; it is zero for p<sub>b</sub> = p<sub>∞</sub>.</p></div>
+            <div data-case="diamond"><div class="eq">\[ c_l=\frac{4\alpha}{\sqrt{M_\infty^2-1}},\qquad c_d=\frac{4}{\sqrt{M_\infty^2-1}}\left[\alpha^2+\frac{(t/c)^2}{4}\left(\frac{c}{x_m}+\frac{c}{c-x_m}\right)\right] \]</div>
+              <p>For the symmetric diamond (x<sub>m</sub> = c/2) the bracket becomes α² + (t/c)².</p></div>
+            <p>Thickness adds drag but no lift in linear theory. The center of pressure of the lift sits at mid-chord, so \(c_{m,c/4}=-\alpha/\sqrt{M_\infty^2-1}\) for all three cases.</p>
+          </div>
+          <div class="prose">
+            <h3>Assumptions and limits</h3>
+            <ul>
+              <li>Two-dimensional, inviscid, calorically perfect gas: no skin friction, so c<sub>d</sub> here is wave drag (plus base drag if p<sub>b</sub> ≠ p<sub>∞</sub>).</li>
+              <li>The leading-edge shocks must be attached. A detached bow shock invalidates the method.</li>
+              <li>Each face has uniform pressure. On the diamond, the flow on each front face must stay supersonic so the shoulder turn is a Prandtl–Meyer fan.</li>
+              <li>The wedge base pressure is an input, not a prediction.</li>
+              <li>Trailing-edge waves and the slip line form downstream of the body. They do not change any surface pressure and are not needed for the forces.</li>
+              <li>α is positive nose-up. c<sub>m</sub> is positive nose-up.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <footer>MAE 3293, Oklahoma State University. Companion to the course compressible aerodynamics calculator. Face numbers: flat plate and wedge 1 = upper, 2 = lower, b = base; diamond 1 = upper front, 2 = upper rear, 3 = lower front, 4 = lower rear; ∞ = freestream.</footer>
+    </main>
+  </div>
+</div>
+
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'},options:{enableMenu:false}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js" async></script>
+<script>
+(function(){
+"use strict";
+const D=Math.PI/180, R=180/Math.PI, $=id=>document.getElementById(id);
+
+/* ---------------- gas dynamics ---------------- */
+function thetaOf(M,b,g){const s=Math.sin(b);return Math.atan(2/Math.tan(b)*(M*M*s*s-1)/(M*M*(g+Math.cos(2*b))+2));}
+function betaMax(M,g){const m2=M*M;const s2=((g+1)*m2/4-1+Math.sqrt((g+1)*((g+1)*m2*m2/16+(g-1)*m2/2+1)))/(g*m2);return Math.asin(Math.min(1,Math.sqrt(s2)));}
+function shock(M,th,g){
+  const bm=betaMax(M,g), thmax=thetaOf(M,bm,g);
+  if(th>thmax) return {type:'detached',theta:th,thmax,M1:M};
+  let lo=Math.asin(1/M), hi=bm;
+  for(let i=0;i<90;i++){const m=(lo+hi)/2; if(thetaOf(M,m,g)<th) lo=m; else hi=m;}
+  const b=(lo+hi)/2, Mn1=M*Math.sin(b), Mn1s=Mn1*Mn1;
+  const p21=1+2*g/(g+1)*(Mn1s-1);
+  const Mn2=Math.sqrt((1+(g-1)/2*Mn1s)/(g*Mn1s-(g-1)/2));
+  const M2=Mn2/Math.sin(b-th);
+  const r21=(g+1)*Mn1s/(2+(g-1)*Mn1s);
+  const p0r=Math.pow(r21,g/(g-1))*Math.pow((g+1)/(2*g*Mn1s-(g-1)),1/(g-1));
+  return {type:'shock',theta:th,beta:b,thmax,Mn1,Mn2,M1:M,M2,p21,p0r};
+}
+const Ag=g=>Math.sqrt((g+1)/(g-1));
+function nu(M,g){const a=Ag(g);return a*Math.atan(Math.sqrt((M*M-1)/(a*a)))-Math.atan(Math.sqrt(M*M-1));}
+function numax(g){return Math.PI/2*(Ag(g)-1);}
+function Mofnu(v,g){let lo=1,hi=2;while(nu(hi,g)<v&&hi<1e7)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(nu(m,g)<v)lo=m;else hi=m;}return (lo+hi)/2;}
+function expand(M,dth,g){
+  const n1=nu(M,g), n2=n1+dth;
+  if(n2>=numax(g)*0.9999) return {type:'vacuum',theta:-dth,M1:M};
+  const M2=Mofnu(n2,g), k=(g-1)/2;
+  const p21=Math.pow((1+k*M*M)/(1+k*M2*M2),g/(g-1));
+  return {type:'exp',theta:-dth,dth,M1:M,M2,nu1:n1,nu2:n2,mu1:Math.asin(1/M),mu2:Math.asin(1/M2),p21};
+}
+function turn(M,th,g){ // th>0 compression, th<0 expansion (radians)
+  if(Math.abs(th)<1e-9) return {type:'none',theta:0,M1:M,M2:M,p21:1,mu1:Math.asin(1/M)};
+  return th>0?shock(M,th,g):expand(M,-th,g);
+}
+
+/* ---------------- geometry ---------------- */
+function geom(cs,P){
+  if(cs==='flat') return {tc:0,e1:0,e2:0,xm:1};
+  if(cs==='wedge'){const d=P.mode==='ang'?P.ang*D:Math.atan(P.tc/2);return {tc:2*Math.tan(d),e1:d,e2:0,xm:1,pb:P.pb};}
+  const xm=P.xm; let tc,e1;
+  if(P.mode==='ang'){e1=P.ang*D; tc=2*xm*Math.tan(e1);} else {tc=P.tc; e1=Math.atan(tc/2/xm);}
+  return {tc,xm,e1,e2:Math.atan(tc/2/(1-xm))};
+}
+/* mean square surface slope per surface (for Ackeret thickness drag) */
+function slopeSq(cs,G){
+  if(cs==='flat') return 0;
+  if(cs==='wedge') return Math.pow(G.tc/2,2);
+  return G.tc*G.tc/4*(1/G.xm+1/(1-G.xm));
+}
+
+/* ---------------- full solution ---------------- */
+// face: {id,name,wave,from,P,M,A,B,side,draw:{pt,phiIn,phiOut,dir}}
+function solve(cs,P,alphaDeg,M,g){
+  const a=alphaDeg*D, G=geom(cs,P);
+  const out={cs,G,a,ok:true,issues:[],warns:[],faces:[]};
+  const fail=(w,name)=>{
+    if(w.type==='detached'){out.ok=false;out.issues.push({k:'bad',t:`Shock detached on the ${name}.`,d:`Required turning θ = ${f(w.theta*R,2)}° exceeds θ<sub>max</sub> = ${f(w.thmax*R,2)}° for M = ${f(w.M1,3)}. A bow shock stands off the leading edge and shock-expansion theory does not apply. Reduce α or the thickness, or raise M<sub>∞</sub>.`});return true;}
+    if(w.type==='vacuum'){out.ok=false;out.issues.push({k:'bad',t:`Expansion limit reached on the ${name}.`,d:`ν would exceed ν<sub>max</sub> = ${f(numax(g)*R,2)}°; the flow cannot turn this far.`});return true;}
+    return false;};
+  const LE=[0,0];
+  if(cs==='flat'){
+    const wu=turn(M,-a,g), wl=turn(M,a,g);
+    out.faces=[
+      {id:'1',name:'Upper surface',wave:wu,from:'∞',A:LE,B:[1,0],side:'up',draw:{pt:LE,phiIn:0,phiOut:-a,dir:1}},
+      {id:'2',name:'Lower surface',wave:wl,from:'∞',A:LE,B:[1,0],side:'low',draw:{pt:LE,phiIn:0,phiOut:-a,dir:-1}}];
+    if(fail(wu,'upper surface')|fail(wl,'lower surface')) return out;
+  } else if(cs==='wedge'){
+    const wu=turn(M,G.e1-a,g), wl=turn(M,G.e1+a,g), h=G.tc/2;
+    out.faces=[
+      {id:'1',name:'Upper surface',wave:wu,from:'∞',A:LE,B:[1,h],side:'up',draw:{pt:LE,phiIn:0,phiOut:G.e1-a,dir:1}},
+      {id:'2',name:'Lower surface',wave:wl,from:'∞',A:LE,B:[1,-h],side:'low',draw:{pt:LE,phiIn:0,phiOut:-(G.e1+a),dir:-1}},
+      {id:'b',name:'Base',wave:{type:'base'},from:'—',A:[1,h],B:[1,-h],side:'base'}];
+    if(fail(wu,'upper surface')|fail(wl,'lower surface')) return out;
+  } else {
+    const w1=turn(M,G.e1-a,g), w3=turn(M,G.e1+a,g), h=G.tc/2, US=[G.xm,h], LS=[G.xm,-h], TE=[1,0];
+    const f1={id:'1',name:'Upper front',wave:w1,from:'∞',A:LE,B:US,side:'up',draw:{pt:LE,phiIn:0,phiOut:G.e1-a,dir:1}};
+    const f3={id:'3',name:'Lower front',wave:w3,from:'∞',A:LE,B:LS,side:'low',draw:{pt:LE,phiIn:0,phiOut:-(G.e1+a),dir:-1}};
+    out.faces=[f1,null,f3,null];
+    if(fail(w1,'upper front face')|fail(w3,'lower front face')){out.faces=[f1,f3];return out;}
+    [['upper',w1],['lower',w3]].forEach(([n,w])=>{if(w.M2<=1){out.ok=false;out.issues.push({k:'bad',t:`Flow behind the ${n} leading-edge shock is subsonic (M = ${f(w.M2,3)}).`,d:'This is the strong-shock neighborhood just below detachment. The shoulder turn is no longer a Prandtl–Meyer fan, so the rear-face pressure cannot be found this way.'});}});
+    if(!out.ok){out.faces=[f1,f3];return out;}
+    const w2=turn(w1.M2,-(G.e1+G.e2),g), w4=turn(w3.M2,-(G.e1+G.e2),g);
+    out.faces=[f1,{id:'2',name:'Upper rear',wave:w2,from:'1',A:US,B:TE,side:'up',draw:{pt:US,phiIn:G.e1-a,phiOut:-G.e2-a,dir:1}},
+               f3,{id:'4',name:'Lower rear',wave:w4,from:'3',A:LS,B:TE,side:'low',draw:{pt:LS,phiIn:-(G.e1+a),phiOut:G.e2-a,dir:-1}}];
+    if(fail(w2,'upper shoulder')|fail(w4,'lower shoulder')) return out;
+  }
+  // subsonic behind a front shock on flat plate / wedge: warn only
+  if(cs!=='diamond') out.faces.forEach(F=>{if(F.wave.type==='shock'&&F.wave.M2<1) out.warns.push({k:'warn',t:`Flow on the ${F.name.toLowerCase()} is subsonic (M = ${f(F.wave.M2,3)}).`,d:'The shock is still attached, but the trailing edge can now influence the surface flow, so the uniform-pressure result is approximate.'});});
+  // pressures
+  const byId={};
+  out.faces.forEach(F=>{
+    if(F.side==='base'){F.P=G.pb;F.M=NaN;}
+    else{const up=F.from==='∞'?1:byId[F.from].P;F.P=up*F.wave.p21;F.M=F.wave.M2;}
+    byId[F.id]=F;});
+  const q=g/2*M*M, ca=Math.cos(a), sa=Math.sin(a);
+  let Np=0,Ap=0,cm=0;
+  out.faces.forEach(F=>{
+    const dx=F.B[0]-F.A[0],dy=F.B[1]-F.A[1],l=Math.hypot(dx,dy),tx=dx/l,ty=dy/l;
+    let n=[-ty,tx];
+    if((F.side==='up'&&n[1]<0)||(F.side==='low'&&n[1]>0)||(F.side==='base'&&n[0]<0)) n=[-n[0],-n[1]];
+    const Fx=-F.P*l*n[0], Fy=-F.P*l*n[1];
+    const gx=-(F.P-1)*l*n[0], gy=-(F.P-1)*l*n[1];
+    const mx=(F.A[0]+F.B[0])/2, my=(F.A[1]+F.B[1])/2;
+    Object.assign(F,{l,n,F:F.P*l,Nc:Fy,Ac:Fx,Lc:-Fx*sa+Fy*ca,Dc:Fx*ca+Fy*sa,Cp:(F.P-1)/q});
+    Np+=Fy; Ap+=Fx; cm+=-(mx*gy-my*gx);
+  });
+  const Lp=Np*ca-Ap*sa, Dp=Np*sa+Ap*ca, cn=Np/q, cA=Ap/q, cmLE=cm/q;
+  Object.assign(out,{q,Np,Ap,Lp,Dp,cl:Lp/q,cd:Dp/q,cn,cA,cmLE,cmc4:cmLE+0.25*cn,xcp:Math.abs(cn)>1e-12?-cmLE/cn:NaN});
+  return out;
+}
+function linear(cs,P,alphaDeg,M,g){
+  const B=Math.sqrt(M*M-1), a=alphaDeg*D, G=geom(cs,P), S=slopeSq(cs,G);
+  let cl=4*a/B, cd=4/B*(a*a+S);
+  if(cs==='wedge'){const cab=-((G.pb-1)/(g/2*M*M))*G.tc; cl-=cab*Math.sin(a); cd+=cab*Math.cos(a);}
+  return {cl,cd,ld:cl/cd,cmc4:-a/B};
+}
+
+/* ---------------- formatting ---------------- */
+function f(x,d=4){if(!isFinite(x))return '—';const v=Math.abs(x)<0.5*Math.pow(10,-d)?0:x;return v.toFixed(d).replace('-','−');}
+function eng(x){if(!isFinite(x))return '—';const a=Math.abs(x);const d=a>=1000?0:a>=10?1:a>=1?2:3;
+  return x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}).replace('-','−');}
+const deg=r=>f(r*R,2)+'°';
+
+/* ---------------- state + controls ---------------- */
+const S={cs:'flat',M:3,alpha:15,gamma:1.4,pinf:101325,chord:1,
+  wedge:{mode:'ang',ang:5,tc:0.175,pb:1},
+  diamond:{mode:'ang',ang:10,tc:0.1763,xm:0.5}};
+const caseNames={flat:'Flat plate',wedge:'Wedge',diamond:'Diamond'};
+const hashOf={flat:'flat-plate',wedge:'wedge',diamond:'diamond'};
+const caseOfHash={'flat-plate':'flat',wedge:'wedge',diamond:'diamond'};
+let chartVar='cl';
+try{const v=localStorage.getItem('airfoil-chart');if(v)chartVar=v;}catch(e){}
+const GP=()=>S.cs==='flat'?null:S[S.cs];
+
+function syncInputs(){
+  ['M','alpha','gamma'].forEach(k=>{$(k).value=+(+S[k]).toFixed(k==='alpha'?1:2);$(k+'_r').value=S[k];});
+  $('pinf').value=S.pinf; $('chord').value=S.chord;
+  const cs=S.cs, P=GP();
+  document.querySelectorAll('.case').forEach(b=>b.setAttribute('aria-selected',b.dataset.case===cs));
+  document.querySelectorAll('[data-case]:not(.case)').forEach(el=>el.hidden=el.dataset.case!==cs);
+  $('flatNote').hidden=cs!=='flat'; $('geomBox').hidden=cs==='flat';
+  if(P){
+    $('mode_ang').setAttribute('aria-pressed',P.mode==='ang');$('mode_tc').setAttribute('aria-pressed',P.mode==='tc');
+    $('box_ang').hidden=P.mode!=='ang'; $('box_tc').hidden=P.mode!=='tc';
+    $('angLabel').innerHTML=cs==='wedge'?'Wedge half-angle, δ <small>deg</small>':'Leading-edge half-angle, ε<sub>1</sub> <small>deg</small>';
+    $('mode_ang').textContent=cs==='wedge'?'Half-angle δ':'Half-angle ε';
+    $('ang').value=+P.ang.toFixed(2); $('ang_r').value=P.ang;
+    $('tc').value=+P.tc.toFixed(4); $('tc_r').value=P.tc;
+    $('box_xm').hidden=cs!=='diamond'; if(cs==='diamond'){$('xm').value=+P.xm.toFixed(2);$('xm_r').value=P.xm;}
+    $('baseBox').hidden=cs!=='wedge'; if(cs==='wedge'){$('pb').value=+P.pb.toFixed(2);$('pb_r').value=P.pb;}
+  }
+  renderPresets();
+}
+function bindPair(k,get,set){
+  $(k+'_r').addEventListener('input',e=>{set(+e.target.value);$(k).value=e.target.value;schedule();});
+  $(k).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isFinite(v)){set(v);$(k+'_r').value=v;schedule();}});
+}
+['M','alpha','gamma'].forEach(k=>bindPair(k,()=>S[k],v=>S[k]=v));
+['ang','tc','xm','pb'].forEach(k=>bindPair(k,()=>GP()[k],v=>{const P=GP();if(P)P[k]=v;}));
+['pinf','chord'].forEach(k=>$(k).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isFinite(v)&&v>0){S[k]=v;schedule();}}));
+$('pbReset').onclick=()=>{S.wedge.pb=1;syncInputs();schedule();};
+function setMode(m){const P=GP();if(!P||m===P.mode)return;const G=geom(S.cs,P);
+  if(m==='tc') P.tc=+G.tc.toFixed(4); else P.ang=+(G.e1*R).toFixed(2);
+  P.mode=m; syncInputs(); schedule();}
+$('mode_ang').onclick=()=>setMode('ang'); $('mode_tc').onclick=()=>setMode('tc');
+
+function setCase(cs,updateHash=true){
+  if(!caseNames[cs]) return;
+  S.cs=cs; syncInputs(); render();
+  if(updateHash){try{history.replaceState(null,'','#'+hashOf[cs]);}catch(e){location.hash=hashOf[cs];}}
+}
+document.querySelectorAll('.case').forEach(b=>b.onclick=()=>setCase(b.dataset.case));
+window.addEventListener('hashchange',()=>{const c=caseOfHash[location.hash.slice(1)];if(c&&c!==S.cs)setCase(c,false);});
+
+const presets={
+  flat:[['M 3, α 15°',{M:3,alpha:15}],['M 2, α 5°',{M:2,alpha:5}],['α = 0 (no force)',{M:2.5,alpha:0}],['Detached shock',{M:1.5,alpha:15}]],
+  wedge:[['M 3, δ 5°, α 15°',{M:3,alpha:15,g:{mode:'ang',ang:5,pb:1}}],['α = 0 (pure wave drag)',{M:2.5,alpha:0,g:{mode:'ang',ang:5,pb:1}}],['Base drag, p_b = 0.5 p∞',{M:2,alpha:0,g:{mode:'ang',ang:8,pb:0.5}}],['Detached shock',{M:2,alpha:10,g:{mode:'ang',ang:15,pb:1}}]],
+  diamond:[['M 3, ε 10°, α 15°',{M:3,alpha:15,g:{mode:'ang',ang:10,xm:0.5}}],['α = 0 (pure wave drag)',{M:2.5,alpha:0,g:{mode:'ang',ang:5,xm:0.5}}],['Thin, M 2, α 4°',{M:2,alpha:4,g:{mode:'tc',tc:0.05,xm:0.5}}],['Detached shock',{M:2,alpha:15,g:{mode:'ang',ang:10,xm:0.5}}]]};
+function renderPresets(){
+  $('presets').innerHTML=presets[S.cs].map((p,i)=>`<button type="button" data-i="${i}">${p[0].replace('p_b','p<sub>b</sub>')}</button>`).join('');
+  $('presets').querySelectorAll('button').forEach(b=>b.onclick=()=>{const p=presets[S.cs][+b.dataset.i][1];S.M=p.M;S.alpha=p.alpha;S.gamma=1.4;if(p.g)Object.assign(S[S.cs],p.g);syncInputs();schedule();});
+}
+document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{chartVar=b.dataset.c;try{localStorage.setItem('airfoil-chart',chartVar);}catch(e){}renderChart();});
+
+let pending=false;
+function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;render();});}
+
+/* ---------------- rendering ---------------- */
+function geomText(cs,G){
+  if(cs==='flat') return 't/c = 0';
+  if(cs==='wedge') return `δ = ${deg(G.e1)}, t/c = ${f(G.tc,3)}${Math.abs(G.pb-1)>1e-9?`, p<sub>b</sub>/p<sub>∞</sub> = ${f(G.pb,2)}`:''}`;
+  return `ε<sub>1</sub> = ${deg(G.e1)}, t/c = ${f(G.tc,3)}, x<sub>m</sub>/c = ${f(G.xm,2)}`;
+}
+function render(){
+  if(!(S.M>1)){ $('banners').innerHTML=`<div class="banner bad"><b>M<sub>∞</sub> must be greater than 1.</b><span>Shock-expansion theory needs supersonic freestream flow.</span></div>`; return; }
+  const cs=S.cs, P=GP(), G=geom(cs,P);
+  if(cs==='wedge') $('geomDerived').innerHTML=`<span>Half-angle δ</span><b>${deg(G.e1)}</b><span>t/c (base height)</span><b>${f(G.tc,4)}</b><span>Base pressure p<sub>b</sub>/p<sub>∞</sub></span><b>${f(G.pb,3)}</b>`;
+  if(cs==='diamond') $('geomDerived').innerHTML=`<span>t/c</span><b>${f(G.tc,4)}</b><span>ε<sub>1</sub> (front)</span><b>${deg(G.e1)}</b><span>ε<sub>2</sub> (rear)</span><b>${deg(G.e2)}</b><span>Shoulder turn ε<sub>1</sub>+ε<sub>2</sub></span><b>${deg(G.e1+G.e2)}</b>`;
+  const sol=solve(cs,P,S.alpha,S.M,S.gamma), lin=linear(cs,P,S.alpha,S.M,S.gamma);
+  let bn=sol.issues.concat(sol.warns).map(i=>`<div class="banner ${i.k}"><b>${i.t}</b><span>${i.d}</span></div>`).join('');
+  if(sol.ok){const near=sol.faces.some(F=>F.wave.type==='shock'&&F.wave.theta>0.92*F.wave.thmax);
+    if(near) bn+=`<div class="banner warn"><b>Close to shock detachment.</b><span>A leading-edge deflection is within 8% of θ<sub>max</sub>. Results are valid, but small changes will detach the shock.</span></div>`;}
+  $('banners').innerHTML=bn;
+  drawFigure(sol);
+  renderTiles(sol,lin);
+  renderCompare();
+  renderTable(sol);
+  renderSteps(sol);
+  renderForces(sol);
+  renderChart();
+}
+
+function renderTiles(sol,lin){
+  const t=(k,v,lv,d=4)=>{
+    let diff='';
+    if(sol.ok&&isFinite(lv)&&Math.abs(lv)>1e-9&&isFinite(v)) diff=` (${(v/lv-1)>=0?'+':'−'}${Math.abs((v/lv-1)*100).toFixed(1)}%)`;
+    return `<div class="tile"><span class="k">${k}</span><span class="v">${sol.ok&&isFinite(v)?f(v,d):'—'}</span><span class="s">linear ${f(lv,d)}${diff}</span></div>`;};
+  $('tiles').innerHTML=t('Lift coefficient, c<sub>l</sub>',sol.cl,lin.cl)+t('Drag coefficient, c<sub>d</sub>',sol.cd,lin.cd)+t('Lift-to-drag, L/D',sol.cl/sol.cd,lin.ld,3)+t('Moment, c<sub>m,c/4</sub>',sol.cmc4,lin.cmc4);
+}
+function renderCompare(){
+  let h=`<thead><tr><th class="l">Case</th><th class="l">Geometry</th><th>c<sub>l</sub></th><th>c<sub>d</sub></th><th>L/D</th><th>c<sub>m,c/4</sub></th><th>x<sub>cp</sub>/c</th></tr></thead><tbody>`;
+  ['flat','wedge','diamond'].forEach(cs=>{const P=cs==='flat'?null:S[cs], so=solve(cs,P,S.alpha,S.M,S.gamma);
+    const v=x=>so.ok?x:NaN;
+    h+=`<tr class="pick${cs===S.cs?' cur':''}" data-go="${cs}" tabindex="0"><td>${caseNames[cs]}</td><td class="l">${geomText(cs,geom(cs,P))}</td><td>${f(v(so.cl),4)}</td><td>${f(v(so.cd),4)}</td><td>${f(v(so.cl/so.cd),3)}</td><td>${f(v(so.cmc4),4)}</td><td>${f(v(so.xcp),3)}</td></tr>`;});
+  $('cmpTable').innerHTML=h+'</tbody>';
+  $('cmpTable').querySelectorAll('tr[data-go]').forEach(r=>{r.onclick=()=>setCase(r.dataset.go);r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setCase(r.dataset.go);}};});
+}
+
+function chip(w){return w.type==='shock'?'<span class="chip shock">shock</span>':w.type==='exp'?'<span class="chip exp">expansion</span>':w.type==='none'?'<span class="chip none">Mach wave</span>':w.type==='base'?'<span class="chip base">prescribed</span>':'<span class="chip shock">'+w.type+'</span>';}
+function renderTable(sol){
+  const c=S.chord, pi=S.pinf;
+  let h=`<thead><tr><th class="l">Face</th><th class="l">Wave onto face</th><th>θ (deg)</th><th>M<sub>i</sub></th><th>p<sub>i</sub>/p<sub>∞</sub></th><th>C<sub>p,i</sub></th><th>ℓ<sub>i</sub> (m)</th><th>F<sub>i</sub> (N/m)</th><th>ΔL′ (N/m)</th><th>ΔD′ (N/m)</th></tr></thead>`;
+  if(!sol.ok){$('surfTable').innerHTML=h+`<tbody><tr><td colspan="10" style="color:var(--muted)">No valid solution for these inputs. See the message above.</td></tr></tbody>`;return;}
+  let b='<tbody>';
+  sol.faces.forEach(F=>{
+    b+=`<tr><td>${F.id} · ${F.name}</td><td class="l">${chip(F.wave)}</td><td>${F.side==='base'?'—':f(F.wave.theta*R,2)}</td><td>${f(F.M,4)}</td><td>${f(F.P,4)}</td><td>${f(F.Cp,4)}</td><td>${f(F.l*c,4)}</td><td>${eng(F.F*pi*c)}</td><td>${eng(F.Lc*pi*c)}</td><td>${eng(F.Dc*pi*c)}</td></tr>`;});
+  b+=`</tbody><tfoot><tr><td colspan="8">Sum over the faces</td><td>L′ = ${eng(sol.Lp*pi*c)}</td><td>D′ = ${eng(sol.Dp*pi*c)}</td></tr></tfoot>`;
+  $('surfTable').innerHTML=h+b;
+}
+
+function waveLines(w,M1lbl,M2lbl,upLbl,downLbl){
+  const r=[];
+  if(w.type==='shock'){
+    r.push(['Turning angle θ',`${deg(w.theta)} <em>toward the flow → compression → oblique shock</em>`]);
+    r.push(['θ<sub>max</sub> at '+M1lbl,`${deg(w.thmax)} <em>θ &lt; θ<sub>max</sub>, shock attached</em>`]);
+    r.push(['Shock angle β',`<span class="hl">${deg(w.beta)}</span> <em>weak solution of θ–β–M</em>`]);
+    r.push(['M<sub>n,1</sub> = '+M1lbl+' sin β',f(w.Mn1,4)]);
+    r.push([`p<sub>${downLbl}</sub>/p<sub>${upLbl}</sub>`,`<span class="hl">${f(w.p21,4)}</span>`]);
+    r.push(['M<sub>n,2</sub>',f(w.Mn2,4)]);
+    r.push([M2lbl+' = M<sub>n,2</sub>/sin(β−θ)',f(w.M2,4)]);
+    r.push(['p<sub>0,2</sub>/p<sub>0,1</sub>',`${f(w.p0r,4)} <em>total-pressure loss across the shock</em>`]);
+  } else if(w.type==='exp'){
+    r.push(['Turning angle θ',`${deg(w.theta)} <em>away from the flow → Prandtl–Meyer expansion of ${deg(w.dth)}</em>`]);
+    r.push(['ν('+M1lbl+')',deg(w.nu1)]);
+    r.push(['ν('+M2lbl+') = ν('+M1lbl+') + |θ|',deg(w.nu2)]);
+    r.push([M2lbl+' <em>(invert ν)</em>',f(w.M2,4)]);
+    r.push(['Fan edges μ<sub>1</sub>, μ<sub>2</sub>',`${deg(w.mu1)}, ${deg(w.mu2)}`]);
+    r.push([`p<sub>${downLbl}</sub>/p<sub>${upLbl}</sub>`,`<span class="hl">${f(w.p21,4)}</span> <em>isentropic, p<sub>0</sub> unchanged</em>`]);
+  } else if(w.type==='none'){
+    r.push(['Turning angle θ','0° <em>face aligned with the flow; only a Mach wave at μ = '+deg(w.mu1)+'</em>']);
+    r.push([`p<sub>${downLbl}</sub>/p<sub>${upLbl}</sub>`,'1']);
+  }
+  return r;
+}
+const calcHTML=rows=>'<div class="calc">'+rows.map(([q,a])=>`<span class="q">${q}</span><span class="a">${a}</span>`).join('')+'</div>';
+function whyText(cs,F,G){
+  const al=f(S.alpha,2)+'°';
+  if(cs==='flat') return F.id==='1'
+    ? `The upper surface lies along the chord, at α = ${al} to the freestream. The flow must turn θ<sub>1</sub> = −α: away from itself (expansion) for α &gt; 0, toward itself (shock) for α &lt; 0.`
+    : `The lower surface also lies along the chord, but the flow approaches it from below. The flow must turn θ<sub>2</sub> = +α: a compression for α &gt; 0.`;
+  if(cs==='wedge') return F.id==='1'
+    ? `The upper face is inclined δ = ${deg(G.e1)} to the chord, with the chord at α = ${al}. The flow must turn θ<sub>1</sub> = δ − α.`
+    : F.id==='2' ? `The lower face is inclined δ the other way, so the flow must turn θ<sub>2</sub> = δ + α. Positive α makes this compression stronger.`
+    : `The base faces downstream into separated flow. Shock-expansion theory cannot predict its pressure, so it is prescribed (change it under Advanced: base pressure).`;
+  return {'1':`The freestream meets a face inclined ε<sub>1</sub> = ${deg(G.e1)} to the chord, with the chord at α = ${al}. The flow must turn θ<sub>1</sub> = ε<sub>1</sub> − α.`,
+    '2':`Flow on face 1 (M<sub>1</sub>) turns around the upper shoulder by ε<sub>1</sub> + ε<sub>2</sub> = ${deg(G.e1+G.e2)}, always away from itself, so this is always an expansion. Then p<sub>2</sub>/p<sub>∞</sub> = (p<sub>2</sub>/p<sub>1</sub>)(p<sub>1</sub>/p<sub>∞</sub>).`,
+    '3':`The lower front face is inclined ε<sub>1</sub> the other way, so the flow must turn θ<sub>3</sub> = ε<sub>1</sub> + α. Positive α makes this compression stronger.`,
+    '4':`Flow on face 3 (M<sub>3</sub>) expands around the lower shoulder by ε<sub>1</sub> + ε<sub>2</sub> = ${deg(G.e1+G.e2)} (rear half-angle ε<sub>2</sub> = ${deg(G.e2)}). Then p<sub>4</sub>/p<sub>∞</sub> = (p<sub>4</sub>/p<sub>3</sub>)(p<sub>3</sub>/p<sub>∞</sub>).`}[F.id];
+}
+function renderSteps(sol){
+  const cs=sol.cs, G=sol.G;
+  $('stepsIntro').innerHTML={
+    flat:'Each surface is flat, so the pressure on it is uniform. For α &gt; 0 the upper surface sees a Prandtl–Meyer expansion at the leading edge and the lower surface sees an oblique shock. The pressure difference between them is the lift.',
+    wedge:'Each face is flat, so the pressure on it is uniform. Both faces see the freestream directly. The base pressure is prescribed rather than computed.',
+    diamond:'Each face is flat, so the pressure on it is uniform. Find the wave that turns the flow onto the face, then apply the shock or Prandtl–Meyer relations. The front faces see the freestream; each rear face sees the flow leaving the front face above or below it.'}[cs];
+  // list of faces to show, including uncomputed ones on failure
+  const ids=cs==='flat'?['1','2']:cs==='wedge'?['1','2','b']:['1','2','3','4'];
+  const names={flat:{1:'Upper surface',2:'Lower surface'},wedge:{1:'Upper surface',2:'Lower surface',b:'Base'},diamond:{1:'Upper front',2:'Upper rear',3:'Lower front',4:'Lower rear'}}[cs];
+  let n=0;
+  const cards=ids.map(id=>{
+    n++;
+    const F=sol.faces.find(x=>x&&x.id===id);
+    const valid=F&&(F.side==='base'||['shock','exp','none'].includes(F.wave.type));
+    const why=whyText(cs,F||{id},G);
+    let body;
+    if(!valid||(!sol.ok&&!F)) body='<p class="why" style="color:var(--bad)">Not computed: see the message above.</p>';
+    else if(F.side==='base'){
+      body=calcHTML([['p<sub>b</sub>/p<sub>∞</sub>',`<span class="hl">${f(G.pb,4)}</span> <em>${Math.abs(G.pb-1)<1e-9?'default: base adds no force':'user-prescribed'}</em>`],['Base height t',`${f(G.tc*S.chord,4)} m`],['C<sub>p,b</sub>',sol.ok?f(F.Cp,4):'—']]);
+    } else {
+      const up=F.from, down=F.id;
+      const rows=waveLines(F.wave,'M<sub>'+up+'</sub>','M<sub>'+down+'</sub>',up,down);
+      if(sol.ok){
+        if(up!=='∞') rows.push([`p<sub>${down}</sub>/p<sub>∞</sub>`,`<span class="hl">${f(F.P,4)}</span>`]);
+        rows.push([`C<sub>p,${down}</sub> = 2(p<sub>${down}</sub>/p<sub>∞</sub> − 1)/(γM<sub>∞</sub><sup>2</sup>)`,f(F.Cp,4)]);
+      }
+      body=calcHTML(rows);
+    }
+    return `<div class="step"><div class="hd"><h3>Step ${n}: Face ${id}, ${names[id].toLowerCase()}</h3>${valid?chip(F.wave):''}</div><p class="why">${why}</p>${body}</div>`;
+  });
+  $('steps').innerHTML=cards.join('');
+}
+function renderForces(sol){
+  if(!sol.ok){$('forceCalc').innerHTML='<span class="q">No valid solution</span><span class="a">—</span>';return;}
+  const pi=S.pinf,c=S.chord,G=sol.G,qd=sol.q*pi,cs=sol.cs;
+  const geo=cs==='flat'?`c = ${f(c,4)} m`:cs==='wedge'?`c = ${f(c,4)} m, t/2 = ${f(G.tc/2*c,4)} m, t = ${f(G.tc*c,4)} m`:`x<sub>m</sub> = ${f(G.xm*c,4)} m, c − x<sub>m</sub> = ${f((1-G.xm)*c,4)} m, t/2 = ${f(G.tc/2*c,4)} m`;
+  const rows=[
+    ['Geometry',geo],
+    [sol.faces.map(F=>`p<sub>${F.id}</sub>`).join(', ')+' (Pa)',sol.faces.map(F=>eng(F.P*pi)).join(', ')],
+    ['N′ normal force',`${eng(sol.Np*pi*c)} N/m`],
+    ['A′ axial force',`${eng(sol.Ap*pi*c)} N/m`],
+    ['L′ = N′cos α − A′sin α',`<span class="hl">${eng(sol.Lp*pi*c)} N/m</span>`],
+    ['D′ = N′sin α + A′cos α',`<span class="hl">${eng(sol.Dp*pi*c)} N/m</span>`],
+    ['q<sub>∞</sub> = (γ/2) p<sub>∞</sub> M<sub>∞</sub><sup>2</sup>',`${eng(qd)} Pa`],
+    ['c<sub>n</sub>, c<sub>a</sub> (body axes)',`${f(sol.cn,4)}, ${f(sol.cA,4)}`],
+    ['c<sub>l</sub> = L′/(q<sub>∞</sub>c)',`<span class="hl">${f(sol.cl,4)}</span>`],
+    ['c<sub>d</sub> = D′/(q<sub>∞</sub>c)',`<span class="hl">${f(sol.cd,4)}</span>`],
+    ['L/D',f(sol.cl/sol.cd,3)],
+    ['c<sub>m,LE</sub> <em>(nose-up +)</em>',`${f(sol.cmLE,4)} <em>each face force acts at its midpoint</em>`],
+    ['c<sub>m,c/4</sub> = c<sub>m,LE</sub> + c<sub>n</sub>/4',f(sol.cmc4,4)],
+    ['x<sub>cp</sub>/c = −c<sub>m,LE</sub>/c<sub>n</sub>',`${f(sol.xcp,4)} <em>${cs==='flat'?'uniform pressure on each side: exactly 0.5':'linear theory: 0.5'}</em>`]
+  ];
+  $('forceCalc').innerHTML=calcHTML(rows).replace(/^<div class="calc">|<\/div>$/g,'');
+}
+
+/* ---------------- figure ---------------- */
+function drawFigure(sol){
+  const G=sol.G,a=sol.a,W=820,H=430,ch=360,ox=230,oy=215,cs=sol.cs;
+  const toW=(x,y)=>[x*Math.cos(a)+y*Math.sin(a),-x*Math.sin(a)+y*Math.cos(a)];
+  const P=(x,y)=>{const w=toW(x,y);return [ox+w[0]*ch,oy-w[1]*ch];};
+  const ray=(p,ang,len)=>[p[0]+len*Math.cos(ang),p[1]-len*Math.sin(ang)];
+  const ln=(p,q,attrs,extra='')=>`<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}" ${attrs} ${extra}/>`;
+  const mk=(id,col)=>`<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="${col}"/></marker>`;
+  let s=`<defs><clipPath id="clipF"><rect x="0" y="0" width="${W}" height="${H}"/></clipPath>${mk('arF','var(--muted)')}${mk('arC','var(--comp)')}${mk('arE','var(--exp)')}${mk('arN','var(--mach)')}${mk('arK','var(--accent)')}</defs><g clip-path="url(#clipF)">`;
+  for(const y of [70,150,280,360]) s+=ln([20,y],[120,y],'stroke="var(--muted)" stroke-width="1.5"','marker-end="url(#arF)"');
+  s+=`<text x="20" y="${oy+5}" class="axlab" style="font-family:var(--f-mono)">M∞ = ${f(S.M,2)}</text>`;
+  const LE=P(0,0);
+  s+=ln(LE,[LE[0]+120,LE[1]],'stroke="var(--mach)" stroke-width="1" stroke-dasharray="3 4"');
+  if(Math.abs(a)>0.3*D){const r=90,e=ray(LE,-a,r);s+=`<path d="M${LE[0]+r},${LE[1]} A${r},${r} 0 0 ${a>0?1:0} ${e[0].toFixed(1)},${e[1].toFixed(1)}" fill="none" stroke="var(--accent)" stroke-width="1.2"/><text x="${LE[0]+r+6}" y="${LE[1]+(a>0?16:-6)}" class="axlab" style="fill:var(--accent)">α</text>`;}
+  const L=270;
+  const drawWave=(w,d)=>{
+    if(!w||!d) return '';
+    const p=P(d.pt[0],d.pt[1]);
+    if(w.type==='shock') return ln(p,ray(p,d.phiIn+d.dir*w.beta,L),'stroke="var(--comp)" stroke-width="2.4"');
+    if(w.type==='exp'){let o='';const a1=d.phiIn+d.dir*w.mu1,a2=d.phiOut+d.dir*w.mu2;for(let k=0;k<6;k++){const t=k/5;o+=ln(p,ray(p,a1+(a2-a1)*t,L*0.9),'stroke="var(--exp)" stroke-width="'+(k===0||k===5?1.6:0.9)+'"');}return o;}
+    if(w.type==='none') return ln(p,ray(p,d.phiIn+d.dir*w.mu1,L),'stroke="var(--mach)" stroke-width="1.2" stroke-dasharray="6 5"');
+    return '';};
+  sol.faces.forEach(F=>{if(F&&F.wave&&F.wave.type!=='detached'&&F.draw&&(sol.ok||F.from==='∞')) s+=drawWave(F.wave,F.draw);});
+  if(!sol.ok&&sol.faces.some(F=>F&&F.wave&&F.wave.type==='detached'))
+    s+=`<path d="M${LE[0]-10},${LE[1]-170} Q${LE[0]-46},${LE[1]} ${LE[0]-10},${LE[1]+170}" fill="none" stroke="var(--comp)" stroke-width="2.4" stroke-dasharray="10 6"/><text x="${LE[0]-150}" y="${LE[1]-150}" class="axlab" style="fill:var(--comp)">detached bow shock</text>`;
+  // body
+  const h=G.tc/2;
+  if(cs==='flat'){const TE=P(1,0);s+=ln(LE,TE,'stroke="var(--body)" stroke-width="3.5" stroke-linecap="round"');}
+  else{
+    const pts=cs==='wedge'?[P(0,0),P(1,h),P(1,-h)]:[P(0,0),P(G.xm,h),P(1,0),P(G.xm,-h)];
+    if(cs==='wedge'){ // separated base wake (schematic)
+      const b1=P(1,h),b2=P(1,-h),tip=P(1+0.32,0);
+      s+=`<path d="M${b1[0].toFixed(1)},${b1[1].toFixed(1)} Q${P(1.18,h*0.9)[0].toFixed(1)},${P(1.18,h*0.9)[1].toFixed(1)} ${tip[0].toFixed(1)},${tip[1].toFixed(1)} Q${P(1.18,-h*0.9)[0].toFixed(1)},${P(1.18,-h*0.9)[1].toFixed(1)} ${b2[0].toFixed(1)},${b2[1].toFixed(1)}" fill="var(--mach)" fill-opacity=".08" stroke="var(--mach)" stroke-width="1" stroke-dasharray="4 4"/>`;
+      const wl=P(1.12,-h);s+=`<text x="${wl[0].toFixed(1)}" y="${(wl[1]+30).toFixed(1)}" class="axlab" font-size="12">separated base flow</text>`;
+    }
+    s+=`<polygon points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="var(--body)" fill-opacity=".14" stroke="var(--body)" stroke-width="2" stroke-linejoin="round"/>`;
+    if(cs==='diamond') s+=ln(LE,P(1,0),'stroke="var(--body)" stroke-width="0.8" stroke-dasharray="2 3"');
+  }
+  // pressure arrows: always pointing into the face, length ∝ p/p_inf
+  if(sol.ok){
+    const pmax=Math.max(...sol.faces.map(F=>F.P),1e-6), k=62/pmax;
+    sol.faces.forEach(F=>{
+      const A=P(F.A[0],F.A[1]), B=P(F.B[0],F.B[1]);
+      const nW=toW(F.n[0],F.n[1]), ns=[nW[0],-nW[1]];
+      const len=F.P>1e-9?Math.max(F.P*k,9):0, gap=3;
+      const col=F.P>1+1e-6?'var(--comp)':F.P<1-1e-6?'var(--exp)':'var(--mach)', m=F.P>1+1e-6?'arC':F.P<1-1e-6?'arE':'arN';
+      const ts=F.side==='base'?[0.3,0.7]:[0.25,0.5,0.75];
+      if(len>=3) ts.forEach(t=>{
+        const b=[A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t];
+        s+=ln([b[0]+ns[0]*(len+gap),b[1]+ns[1]*(len+gap)],[b[0]+ns[0]*gap,b[1]+ns[1]*gap],`stroke="${col}" stroke-width="1.6"`,`marker-end="url(#${m})"`);});
+      const mid=[(A[0]+B[0])/2,(A[1]+B[1])/2], d=len+(F.side==='base'?66:38);
+      const lx=mid[0]+ns[0]*d, ly=mid[1]+ns[1]*d;
+      const l2=F.side==='base'?'base (prescribed)':'M '+f(F.M,3);
+      s+=`<g font-family="var(--f-mono)" font-size="12.5"><rect x="${(lx-56).toFixed(1)}" y="${(ly-17).toFixed(1)}" width="112" height="32" rx="4" fill="var(--panel)" fill-opacity=".9" stroke="var(--line)"/><text x="${lx.toFixed(1)}" y="${(ly-3).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-weight="600">${F.id}: p/p∞ ${f(F.P,3)}</text><text x="${lx.toFixed(1)}" y="${(ly+11).toFixed(1)}" text-anchor="middle" fill="var(--muted)">${l2}</text></g>`;
+    });
+    if(isFinite(sol.xcp)&&Math.hypot(sol.cl,sol.cd)>1e-6){
+      const mag=Math.hypot(sol.cl,sol.cd), sc=90/Math.max(mag,0.05);
+      const xc=Math.min(Math.max(sol.xcp,-0.2),1.2), base=P(xc,0);
+      const tip=[base[0]+sol.cd*sc,base[1]-sol.cl*sc];
+      s+=ln(base,tip,'stroke="var(--accent)" stroke-width="2.6"','marker-end="url(#arK)"');
+      s+=ln(base,[base[0],base[1]-sol.cl*sc],'stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3"');
+      s+=ln(base,[base[0]+sol.cd*sc,base[1]],'stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3"');
+      s+=`<text x="${(tip[0]+8).toFixed(1)}" y="${(tip[1]+4).toFixed(1)}" font-family="var(--f-body)" font-size="13" font-weight="600" fill="var(--accent)">R′</text>`;
+    }
+  }
+  s+='</g>';
+  $('fig').innerHTML=s;
+}
+
+/* ---------------- chart ---------------- */
+let lastSweepKey=null, sweepCache=null;
+function renderChart(){
+  const P=GP();
+  const key=[S.cs,S.M,S.gamma,JSON.stringify(P)].join('|');
+  if(key!==lastSweepKey){
+    const arr=[];for(let al=-20;al<=25.0001;al+=0.25){const so=solve(S.cs,P,al,S.M,S.gamma),li=linear(S.cs,P,al,S.M,S.gamma);
+      arr.push({al,se:so.ok?{cl:so.cl,cd:so.cd,ld:so.cl/so.cd,cm:so.cmc4}:null,li:{cl:li.cl,cd:li.cd,ld:li.ld,cm:li.cmc4}});}
+    sweepCache=arr; lastSweepKey=key;
+  }
+  document.querySelectorAll('[data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===chartVar));
+  const v=chartVar, W=820,H=340,m={l:64,r:20,t:16,b:44}, pw=W-m.l-m.r, ph=H-m.t-m.b;
+  let ys=[];sweepCache.forEach(p=>{if(p.se&&isFinite(p.se[v]))ys.push(p.se[v]);if(isFinite(p.li[v]))ys.push(p.li[v]);});
+  if(v==='ld'){const se=sweepCache.filter(p=>p.se&&isFinite(p.se.ld)).map(p=>Math.abs(p.se.ld));const ext=Math.max(...se,1)*1.3;ys=ys.map(y=>Math.max(-ext,Math.min(ext,y)));}
+  let lo=Math.min(...ys),hi=Math.max(...ys);
+  if(!isFinite(lo)||hi-lo<1e-9){lo=-1;hi=1;}
+  const step=niceStep((hi-lo)/6); lo=Math.floor(lo/step)*step; hi=Math.ceil(hi/step)*step;
+  const X=al=>m.l+(al+20)/45*pw, Y=y=>m.t+(hi-Math.min(Math.max(y,lo),hi))/(hi-lo)*ph;
+  let s='';
+  // invalid shading first
+  let start=null;sweepCache.forEach((p,i)=>{const bad=!p.se;if(bad&&start===null)start=p.al;if((!bad||i===sweepCache.length-1)&&start!==null){const end=bad?p.al:p.al-0.25;s+=`<rect x="${X(start)}" y="${m.t}" width="${Math.max(2,X(end)-X(start))}" height="${ph}" fill="var(--bad)" fill-opacity=".08"/>`;start=null;}});
+  for(let y=lo;y<=hi+step/2;y+=step){const yy=Y(y);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${yy}" y2="${yy}" class="gridl"/><text x="${m.l-8}" y="${yy+4}" text-anchor="end" class="tick">${f(y,step<0.01?3:step<0.1?2:step<1?1:0)}</text>`;}
+  for(let al=-20;al<=25;al+=5){const xx=X(al);s+=`<line x1="${xx}" x2="${xx}" y1="${m.t}" y2="${H-m.b}" class="gridl"/><text x="${xx}" y="${H-m.b+18}" text-anchor="middle" class="tick">${al}</text>`;}
+  if(lo<0&&hi>0) s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(0)}" y2="${Y(0)}" class="axis"/>`;
+  s+=`<line x1="${X(0)}" x2="${X(0)}" y1="${m.t}" y2="${H-m.b}" class="axis"/>`;
+  s+=`<text x="${m.l+pw/2}" y="${H-6}" text-anchor="middle" class="axlab">angle of attack α (deg)</text>`;
+  s+=`<text transform="translate(16 ${m.t+ph/2}) rotate(-90)" text-anchor="middle" class="axlab">${{cl:'c_l',cd:'c_d',ld:'L/D',cm:'c_m,c/4'}[v]} · ${caseNames[S.cs].toLowerCase()}</text>`;
+  const path=get=>{let d='',pen=false;sweepCache.forEach(p=>{const y=get(p);if(isFinite(y)){d+=(pen?'L':'M')+X(p.al).toFixed(1)+','+Y(y).toFixed(1);pen=true;}else pen=false;});return d;};
+  s+=`<path d="${path(p=>p.li[v])}" fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="6 5"/>`;
+  s+=`<path d="${path(p=>p.se?p.se[v]:NaN)}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"/>`;
+  const cur=solve(S.cs,P,S.alpha,S.M,S.gamma);
+  if(cur.ok&&S.alpha>=-20&&S.alpha<=25){const yv={cl:cur.cl,cd:cur.cd,ld:cur.cl/cur.cd,cm:cur.cmc4}[v];
+    if(isFinite(yv)) s+=`<circle cx="${X(S.alpha)}" cy="${Y(yv)}" r="6" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/><text x="${X(S.alpha)+10}" y="${Y(yv)-10}" class="tick" style="fill:var(--ink)">α = ${f(S.alpha,1)}°, ${f(yv,3)}</text>`;}
+  $('chart').innerHTML=s;
+}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x)));const n=x/p;return (n<1.5?1:n<3?2:n<7?5:10)*p;}
+
+const initial=caseOfHash[location.hash.slice(1)]||'flat';
+S.cs=initial; syncInputs(); render();
+})();
+</script>
+</body>
+</html>
