@@ -371,7 +371,8 @@ button:hover {
   color: var(--text-muted);
 }
 .results-table .value {
-  font-family: monospace;
+  font-family: inherit;
+  font-variant-numeric: lining-nums tabular-nums;
   font-weight: 600;
   color: var(--accent);
 }
