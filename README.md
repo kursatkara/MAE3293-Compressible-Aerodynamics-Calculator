@@ -1,21 +1,28 @@
-# MAE 3293 Compressible Aerodynamics Calculator
+# MAE 3293 Compressible Aerodynamics Calculator (moved)
 
-Interactive calculators for the high-speed (compressible) part of MAE 3293 Fundamentals of Aerodynamics at Oklahoma State University.
+The calculators now live on the MAE 3293 Fundamentals of Aerodynamics course site, next to the interactive lessons:
+**https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/#calculators** ([source](https://github.com/kursatkara/MAE3293_Fundamentals_of_Aerodynamics)).
 
-**Live site:** https://kursatkara.github.io/MAE3293-Compressible-Aerodynamics-Calculator/
+This repository only forwards the old addresses, so existing links keep working:
 
-- **Main calculator** (`index.html`): isentropic flow, normal shock, oblique shock, Prandtl–Meyer expansion, wedge airfoil
-- **Supersonic Airfoil Calculator** (`supersonic-airfoils.html`): shock-expansion theory for a flat plate, a wedge and a diamond airfoil, with surface pressures, face forces, lift, drag and moment coefficients, and step-by-step solutions. Direct links: [`#flat-plate`](https://kursatkara.github.io/MAE3293-Compressible-Aerodynamics-Calculator/supersonic-airfoils.html#flat-plate), [`#wedge`](https://kursatkara.github.io/MAE3293-Compressible-Aerodynamics-Calculator/supersonic-airfoils.html#wedge), [`#diamond`](https://kursatkara.github.io/MAE3293-Compressible-Aerodynamics-Calculator/supersonic-airfoils.html#diamond)
-- **Interactive lessons** ([MAE 3293 Fundamentals of Aerodynamics](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/), [source](https://github.com/kursatkara/MAE3293_Fundamentals_of_Aerodynamics)): chapter-by-chapter lessons with live figures, linked from the **Lessons** tab. They currently cover Chapter 9, oblique shock and expansion waves, and Chapter 10, nozzles, diffusers, and wind tunnels. The old address, `oblique-shock-expansion-waves.html`, redirects to the Chapter 9 lesson.
+| Old address | Now |
+|---|---|
+| `index.html#isentropic` | [Isentropic Flow](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/calculators/isentropic-flow.html) |
+| `index.html#normal-shock` | [Normal Shock](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/calculators/normal-shock.html) |
+| `index.html#oblique-shock` | [Oblique Shock](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/calculators/oblique-shock.html) |
+| `index.html#prandtl-meyer` | [Prandtl–Meyer Expansion](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/calculators/prandtl-meyer-expansion.html) |
+| `index.html#wedge-airfoil` | [Supersonic Airfoils, wedge case](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/calculators/supersonic-airfoils.html#wedge) |
+| `index.html` (any other) | [Calculators on the course home](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/#calculators) |
+| `supersonic-airfoils.html#…` | [Supersonic Airfoils](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/calculators/supersonic-airfoils.html) (same `#flat-plate`, `#wedge`, `#diamond`) |
+| `diamond-airfoil.html` | [Supersonic Airfoils, diamond case](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/calculators/supersonic-airfoils.html#diamond) |
+| `oblique-shock-expansion-waves.html` | [Chapter 9 lesson](https://kursatkara.github.io/MAE3293_Fundamentals_of_Aerodynamics/lessons/oblique-shock-expansion-waves.html) |
+
+The last version of the calculators themselves is on the branch `backup/before-merge-2026-10-29`.
 
 ## License
 
 - **Code** (HTML, CSS, JavaScript): [MIT License](LICENSE).
 - **Content** (explanatory text, worked solutions, figures and diagrams): [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
-
-## Suggested attribution
-
-Kara, K. *MAE 3293 Compressible Aerodynamics Calculator.* Oklahoma State University, 2025–2026. https://kursatkara.github.io/MAE3293-Compressible-Aerodynamics-Calculator/ — licensed under CC BY 4.0.
 
 ## Acknowledgment
 
